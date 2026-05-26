@@ -19,6 +19,7 @@ CREATE TABLE programs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT DEFAULT '',
+  group_name TEXT DEFAULT '',
   sponsor_id UUID NOT NULL REFERENCES profiles(id),
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
@@ -31,6 +32,7 @@ CREATE TABLE programs (
   scoring_model TEXT NOT NULL DEFAULT 'DAILY_HABITS',
   status TEXT NOT NULL DEFAULT 'DRAFT',
   invite_code TEXT NOT NULL UNIQUE,
+  streak_grace_period BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -58,6 +60,7 @@ CREATE TABLE participants (
   total_points INT NOT NULL DEFAULT 0,
   total_habits INT NOT NULL DEFAULT 0,
   current_streak INT NOT NULL DEFAULT 0,
+  streak_longest INT NOT NULL DEFAULT 0, -- all-time best streak
   health_data_consent BOOLEAN NOT NULL DEFAULT false, -- v2 wearable stub
   joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id, program_id)

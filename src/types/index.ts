@@ -24,6 +24,7 @@ export interface Program {
   name: string;
   description: string;
   sponsor_id: string;
+  group_name: string;
   start_date: string;
   end_date: string;
   period_type: PeriodType;
@@ -35,6 +36,7 @@ export interface Program {
   scoring_model: ScoringModel;
   status: ProgramStatus;
   invite_code: string; // unique join code
+  streak_grace_period: boolean; // sponsor toggle: 1 missed day doesn't break streak
   created_at: string;
   updated_at: string;
 }
@@ -83,6 +85,7 @@ export interface Participant {
   total_points: number;
   total_habits: number;
   current_streak: number;
+  streak_longest: number; // all-time best streak
   health_data_consent: boolean; // v2 wearable stub
   joined_at: string;
 }
@@ -124,6 +127,7 @@ export interface LeaderboardEntry {
   habits_year: number;
   total_points: number;
   current_streak: number;
+  streak_longest: number;
   rank: number;
 }
 

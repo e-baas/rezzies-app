@@ -22,9 +22,11 @@ export function LeaderboardRow({ entry, isCurrentUser }: Props) {
         <Text style={[styles.name, isCurrentUser && styles.nameHighlight]}>
           {entry.display_name}
         </Text>
-        <Text style={styles.streak}>
-          {entry.current_streak > 0 ? `🔥 ${entry.current_streak} day streak` : ''}
-        </Text>
+        {entry.current_streak > 0 && (
+          <Text style={styles.streak}>
+            🔥 {entry.current_streak} day streak
+          </Text>
+        )}
       </View>
 
       <View style={styles.statCol}>

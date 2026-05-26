@@ -12,33 +12,38 @@ import { calculateDailyPoints } from '../../src/engine/scoring';
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
-  const { habits, monthlyBonuses, loadHabits, loadBonuses } = useProgramStore();
+  const { habits, monthlyBonuses, loadHabits, loadBonuses, currentProgram, loadProgram } = useProgramStore();
   const { todayChecks, bonusProgress, loadTodayChecks, loadBonusProgress } = useHabitStore();
   const [programId, setProgramId] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [streakLongest, setStreakLongest] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
-    // Get participant's program
     const { data: participant } = await supabase
       .from('participants')
-      .select('id, program_id')
+      .select('id, program_id, current_streak, streak_longest')
       .eq('user_id', user.id)
+      .order('joined_at', { ascending: false })
+      .limit(1)
       .single();
 
     if (!participant) return;
     setProgramId(participant.program_id);
     setParticipantId(participant.id);
+    setStreak(participant.current_streak || 0);
+    setStreakLongest(participant.streak_longest || 0);
 
     await Promise.all([
+      loadProgram(participant.program_id),
       loadHabits(participant.program_id),
       loadBonuses(participant.program_id),
     ]);
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
-
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
   useEffect(() => {
@@ -53,6 +58,18 @@ export default function HomeScreen() {
     await loadData();
     if (participantId && habits.length > 0) {
       await loadTodayChecks(participantId, habits.map((h) => h.id));
+    }
+    // Refetch streak
+    if (participantId) {
+      const { data: p } = await supabase
+        .from('participants')
+        .select('current_streak, streak_longest')
+        .eq('id', participantId)
+        .single();
+      if (p) {
+        setStreak(p.current_streak || 0);
+        setStreakLongest(p.streak_longest || 0);
+      }
     }
     setRefreshing(false);
   };
@@ -87,6 +104,22 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}
     >
+      {/* Program name + Streak header */}
+      <View style={styles.header}>
+        {currentProgram && (
+          <Text style={styles.programName}>{currentProgram.name}</Text>
+        )}
+        <View style={styles.streakRow}>
+          <View style={styles.streakBadge}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={styles.streakText}>{streak} day streak</Text>
+          </View>
+          {streakLongest > streak && (
+            <Text style={styles.streakBest}>Best: {streakLongest} days</Text>
+          )}
+        </View>
+      </View>
+
       {/* Progress Ring */}
       <View style={styles.ringContainer}>
         <ProgressRing
@@ -118,6 +151,45 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { paddingBottom: 40 },
+  header: {
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  programName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  streakEmoji: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  streakText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  streakBest: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
   ringContainer: {
     alignItems: 'center',
     paddingVertical: 24,
