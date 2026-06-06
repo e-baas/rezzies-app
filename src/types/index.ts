@@ -146,6 +146,31 @@ export interface ScoringResult {
   details: Record<string, unknown>;
 }
 
+// === Bug Reports / Crash Captures ===
+export type BugSeverity = 'low' | 'annoying' | 'blocks';
+export type BugSource = 'manual' | 'js_error' | 'native_crash' | 'unhandled_promise';
+export type BugStatus = 'open' | 'triaged' | 'fixed' | 'wontfix';
+
+export interface BugReport {
+  id: string;
+  user_id: string | null;
+  user_email: string | null;
+  description: string;
+  severity: BugSeverity;
+  source: BugSource;
+  screen_name: string | null;
+  device_model: string | null;
+  os_platform: string | null;
+  os_version: string | null;
+  app_version: string | null;
+  app_build: string | null;
+  stack_trace: string | null;
+  status: BugStatus;
+  created_at: string;
+  triaged_at: string | null;
+  fixed_at: string | null;
+}
+
 // === Navigation ===
 export type RootStackParamList = {
   '(auth)/sign-in': undefined;
@@ -154,4 +179,5 @@ export type RootStackParamList = {
   'create-program': undefined;
   'join-program': undefined;
   'program/[id]': { id: string };
+  'report-bug': undefined;
 };

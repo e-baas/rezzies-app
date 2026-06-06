@@ -3,6 +3,11 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '../src/stores/authStore';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { installErrorReporter } from '../src/lib/errorReporter';
+
+// Wire global JS error + unhandled-promise capture as early as possible.
+installErrorReporter();
 
 export default function RootLayout() {
   const { user, loading, loadSession } = useAuthStore();
@@ -20,7 +25,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
         {user ? (
@@ -28,7 +33,8 @@ export default function RootLayout() {
         ) : (
           <Stack.Screen name="(auth)" />
         )}
+        <Stack.Screen name="report-bug" options={{ headerShown: true, title: 'Report a Bug', presentation: 'modal' }} />
       </Stack>
-    </>
+    </ErrorBoundary>
   );
 }
