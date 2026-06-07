@@ -8,20 +8,35 @@
     "userInterfaceStyle": "light",
     "scheme": "rezzies",
     "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
       "backgroundColor": "#0F172A"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rezzies.app"
+      "bundleIdentifier": "com.ebaas.rezzies",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"
       },
-      "package": "com.rezzies.app"
+      "package": "com.ebaas.rezzies",
+      "versionCode": 1
     },
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "supabaseUrl": "https://umnowggiuiotsgsnvvuj.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbm93Z2dpdWlvdHNnc252dnVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MDQ5MDEsImV4cCI6MjA5NjI4MDkwMX0.QYSadTNG-KAwJAmyb9h8pMJA9U7yvx8xgMGgkfp7BCo"

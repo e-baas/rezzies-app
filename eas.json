@@ -1,0 +1,69 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "internal": {
+      "distribution": "internal",
+      "channel": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "internal"
+      },
+      "ios": {
+        "resourceClass": "m-medium",
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "production"
+      },
+      "ios": {
+        "resourceClass": "m-medium",
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "internal": {
+      "ios": {
+        "appleId": "dan@amaze.net",
+        "appleTeamId": "F3SY7UT5BV",
+        "ascApiKeyPath": "./secrets/asc-api-key.p8",
+        "ascApiKeyIssuerId": "8107c407-ef5f-4c6a-8270-537a187228fa",
+        "ascApiKeyId": "WZ5NHN6455"
+      }
+    },
+    "production": {
+      "ios": {
+        "appleId": "dan@amaze.net",
+        "appleTeamId": "F3SY7UT5BV",
+        "ascApiKeyPath": "./secrets/asc-api-key.p8",
+        "ascApiKeyIssuerId": "8107c407-ef5f-4c6a-8270-537a187228fa",
+        "ascApiKeyId": "WZ5NHN6455"
+      }
+    }
+  }
+}
