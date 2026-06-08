@@ -6,7 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "bootstrap:asc-key": "node scripts/bootstrap-asc-key.js",
+    "build:internal:ios": "npx eas-cli build --profile internal --platform ios --non-interactive",
+    "build:internal:android": "npx eas-cli build --profile internal --platform android --non-interactive",
+    "submit:internal:ios": "npx eas-cli submit --profile internal --platform ios --latest --non-interactive"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

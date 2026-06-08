@@ -1,85 +1,86 @@
-# Rezzies — Install Flow (Pilot Build)
+# Install Rezzies on your phone — Pilot Edition
 
-This is the install guide for the 3-5 pilot families. The Rezzies app is in
-**internal testing only** — not publicly available on the App Store or Play
-Store. You install it through Apple TestFlight (iOS) or a direct APK link
-(Android, via Expo EAS internal distribution).
+Welcome to the Rezzies friends-and-family pilot. Rezzies is in **private testing
+only** — not on the App Store or Play Store yet. You install it through
+**Apple TestFlight** (iPhone) or by tapping an **install link** (Android).
+This page walks you through it. Takes about 3 minutes.
 
 ---
 
-## iOS — TestFlight
+## iPhone — TestFlight
 
-### Step 1. Install TestFlight
+### Step 1. Install TestFlight (one time)
 
-1. Open the App Store on your iPhone.
-2. Search **TestFlight** (by Apple) and install it.
-3. Open TestFlight once and sign in with the **Apple ID you'll use to test
-   Rezzies**.
+1. Open the **App Store** on your iPhone.
+2. Search **TestFlight** (by Apple) and tap **Get** to install it.
+3. Open TestFlight once and sign in with the **Apple ID** you want to use for
+   testing Rezzies.
 
-### Step 2. Accept your invite
+### Step 2. Tap your invite
 
-1. The chairman will send you a **TestFlight invite link** by email or text
-   message. The email subject will be something like
-   *"You're invited to test Rezzies"*.
-2. Tap the link on your iPhone.
-3. TestFlight will open and show **Rezzies — Accept**. Tap **Accept**.
+You'll get an email from Apple titled something like *"You're invited to test
+Rezzies"*, or a text from us with a TestFlight invite link.
+
+1. Tap the link on your iPhone (not on a laptop — TestFlight is iPhone-only).
+2. TestFlight opens to a **Rezzies** page. Tap **Accept**.
 
 ### Step 3. Install Rezzies
 
-1. Tap **Install** in TestFlight.
-2. Wait for the download (≈30 seconds on Wi-Fi).
+1. Tap **Install**.
+2. Wait ~30 seconds.
 3. Tap **Open**, or find the Rezzies icon on your home screen.
 
-### Step 4. First launch
+### Step 4. Sign up
 
-1. Sign up with your email + password (this creates your Rezzies profile in
-   Supabase).
-2. Enter the **join code** the program sponsor shares with you.
+1. Sign up with your email + a password.
+2. Enter the **join code** your program sponsor shares with you.
 3. You're in. Start your first daily check-in.
 
-### What to expect
+### What to expect on iPhone
 
-- **Updates**: TestFlight will notify you when a new build is available.
-  Tap **Update** to install. Builds expire 90 days after upload.
-- **Crash reports**: TestFlight automatically sends crash logs back to us. No
-  action needed.
-- **Feedback**: shake your phone in the app to open the TestFlight feedback
-  sheet, or screenshot + share via the share sheet.
+- **Updates**: TestFlight notifies you when a new build is ready. Tap **Update**.
+- **Crash reports**: Apple sends them to us automatically. Nothing for you to do.
+- **Feedback**: shake the phone inside Rezzies to open the TestFlight feedback
+  sheet, or screenshot and text it to us.
+- **90-day expiry**: TestFlight builds expire 90 days after release. We'll send
+  a fresh build well before then.
 
 ---
 
-## Android — Expo EAS Internal Distribution
+## Android — Install link
 
-### Step 1. Allow installs from unknown sources
+### Step 1. Allow installs from your browser (one time)
 
 1. Open **Settings → Apps → Special access → Install unknown apps**.
-2. Find your browser (Chrome) and toggle **Allow from this source**.
-   (Wording varies slightly by phone manufacturer.)
+2. Find **Chrome** (or whichever browser opens the install link) and toggle
+   **Allow from this source**.
+3. Wording varies slightly by phone — Samsung calls it "Install unknown apps,"
+   Google Pixel calls it "Special app access," but the toggle is the same.
 
 ### Step 2. Tap the install link
 
-1. The chairman will send you a **rezzies-pilot.apk** link by email or text.
-2. Tap the link on your Android phone.
-3. Your browser will download the APK.
+We'll send you an **install link** (it ends in `expo.dev/.../builds/...` or
+`.apk`) by email or text.
+
+1. Tap the link on your Android phone.
+2. Your browser downloads `rezzies.apk`.
 
 ### Step 3. Install
 
-1. Tap the downloaded APK file (in your notification shade or Downloads
-   folder).
-2. Tap **Install**. Android will warn you the app is from an unknown
-   developer — tap **Install anyway**.
+1. Tap the downloaded file (in your notification shade or **Downloads** folder).
+2. Tap **Install**. Android warns you the app is from an unknown developer —
+   tap **Install anyway**.
 3. Tap **Open** when install finishes.
 
-### Step 4. First launch
+### Step 4. Sign up
 
-Same as iOS Step 4 above.
+Same as iPhone Step 4 above.
 
-### What to expect
+### What to expect on Android
 
-- **Updates**: we'll send a new link when a new build is ready. Tap to
-  install over the old one (your data is preserved).
-- **No automatic update prompts** on Android internal distribution. Watch
-  for the chairman's "new build available" message.
+- **Updates**: we'll text you a new install link when a new build is out. Tap to
+  install over the old one — your data is preserved.
+- **No automatic update prompts**. Watch for our "new build available" message.
 
 ---
 
@@ -87,21 +88,26 @@ Same as iOS Step 4 above.
 
 | Problem | Try this |
 |---|---|
-| TestFlight says invite expired | Reply to the chairman and ask for a fresh invite — the link is one-time. |
-| App crashes on launch | Screenshot the error and send it. Reinstall from the same link. |
-| Can't sign in | Make sure you're on Wi-Fi or cellular data. Try resetting the password from the sign-in screen. |
+| TestFlight says "Invite expired" | Reply and ask for a fresh invite — the link is single-use. |
+| App crashes on launch | Screenshot the error and text it to us. Reinstall from the same link. |
+| Can't sign in | Confirm you're online (Wi-Fi or cellular). Try **Forgot password** on the sign-in screen. |
 | Join code doesn't work | Confirm the code with your program sponsor. Codes are 6 characters, case-insensitive. |
-| Don't see today's habits | Pull down to refresh on the Home tab. |
+| Today's habits look empty | Pull down on the **Home** tab to refresh. |
+| Notification didn't fire | Open Settings → Notifications → Rezzies → make sure **Allow Notifications** is on. |
+
+If none of these fix it, text or email us — we're a tiny team and respond fast.
 
 ---
 
-## App identity
+## About this build
 
-- **App name (home screen):** Rezzies
-- **Bundle ID (iOS):** `com.ebaas.rezzies`
-- **Package (Android):** `com.ebaas.rezzies`
-- **Apple Developer Team:** F3SY7UT5BV (e-baas venture identity)
-- **Internal contact:** dan@amaze.net
+- **App name on your home screen:** Rezzies
+- **iOS Bundle ID:** `com.ebaas.rezzies`
+- **Android Package:** `com.ebaas.rezzies`
+- **Apple Developer Team:** e-baas (Team ID F3SY7UT5BV) — Dan's venture identity
+- **Pilot contact:** dan@amaze.net
+
+Thanks for piloting with us.
 
 ---
 
