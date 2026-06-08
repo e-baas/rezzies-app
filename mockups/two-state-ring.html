@@ -1,0 +1,446 @@
+<!doctype html>
+<!--
+  Rezzies V2 — two-state ring mockup (partial 3/5 orange vs full 5/5 teal).
+  Source for the chairman-facing PNG used to confirm the no-strikethrough
+  rule on completed habit rows.
+
+  Spec source: V2 Mockup Doc (doc:cmq4pc61f0023s6012xi1uoh9) line 45 —
+  "Pills for completed habits are whole-box teal with white check
+  (no strikethrough)."
+
+  Tokens (dark, from V2 Mockup Doc token table):
+    --bg #0A0A0A · --surface #161616 · --elev #222222 · --border #2A2A2A
+    --text #FAFAFA · --text-2 #A3A3A3 · --text-mute #737373
+    --primary #F85C1E (aggregate progress) · --secondary #14B8A6 (per-row + closed-day)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rezzies V2 — two-state ring (no strikethrough)</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --surface: #161616;
+    --elev: #222222;
+    --border: #2A2A2A;
+    --text: #FAFAFA;
+    --text-2: #A3A3A3;
+    --text-mute: #737373;
+    --primary: #F85C1E;
+    --secondary: #14B8A6;
+    --secondary-2: #2DD4BF;
+    --secondary-soft: rgba(20, 184, 166, 0.12);
+    --primary-soft: rgba(248, 92, 30, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .canvas {
+    width: 1264px;
+    padding: 40px 32px 32px;
+    background: var(--bg);
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  .col-label {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .col-label .tag {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: var(--text);
+  }
+  .col-label .sub {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  /* Phone shell */
+  .phone {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    padding: 18px 22px 22px;
+    position: relative;
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 14px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 22px;
+    background: #000;
+    border-radius: 999px;
+  }
+
+  /* Header row */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-top: 26px;
+    margin-bottom: 18px;
+  }
+  .greeting h1 {
+    font-size: 28px;
+    line-height: 1.1;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .greeting .date {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1.5px solid var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.15;
+  }
+  .streak .flame { font-size: 14px; }
+
+  /* Ring */
+  .ring-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 18px;
+  }
+  .ring {
+    position: relative;
+    width: 200px;
+    height: 200px;
+  }
+  .ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ring .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .ring .pct {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+  .ring .frac {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+  .ring .pts {
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .ring.partial .pts { color: var(--primary); }
+  .ring.full    .pts { color: var(--secondary); }
+
+  /* Today's habits */
+  .habits-hdr {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 6px 4px 12px;
+  }
+  .habits-hdr .title {
+    font-size: 13px;
+    letter-spacing: 1.2px;
+    font-weight: 800;
+  }
+  .partial .habits-hdr .title { color: var(--primary); }
+  .full    .habits-hdr .title { color: var(--secondary); }
+  .habits-hdr .meta {
+    font-size: 12px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Rows */
+  .row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .row .check {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    border: 2px solid var(--text-mute);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 12px;
+    flex: 0 0 26px;
+  }
+  .row .name {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    /* No text-decoration. Spec: per-V2 Mockup Doc line 45,
+       checked state is communicated by box-fill + check icon only. */
+  }
+  .row .pts {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Checked row state — whole-box teal, white check, white text, NO strikethrough */
+  .row.checked {
+    background: var(--secondary);
+    border-color: var(--secondary);
+  }
+  .row.checked .check {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+  }
+  .row.checked .check svg path { stroke: var(--secondary); }
+  .row.checked .name { color: #FFFFFF; }
+  .row.checked .pts  { color: #FFFFFF; }
+
+  /* Bottom nav */
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    background: var(--elev);
+    padding: 6px;
+    border-radius: 14px;
+    margin-top: 18px;
+  }
+  .nav .tab {
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-2);
+  }
+  .nav .tab.active {
+    background: var(--secondary);
+    color: #FFFFFF;
+  }
+
+  /* Footer rule */
+  .rule {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+  .rule code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; }
+
+  .attribution {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-mute);
+  }
+  .attribution a { color: var(--text-2); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="columns">
+
+    <!-- ============================ PARTIAL · 3/5 ============================ -->
+    <div class="col">
+      <div class="col-label">
+        <div class="tag">PARTIAL · 3 OF 5 DONE</div>
+        <div class="sub">Ring + "+pts" = orange (aggregate-progress)</div>
+      </div>
+      <div class="phone partial">
+        <div class="header">
+          <div class="greeting">
+            <h1>Good morning,<br/>Dan</h1>
+            <div class="date">Mon · Jun 8</div>
+          </div>
+          <div class="streak"><span class="flame">🔥</span> 12-day<br/>streak</div>
+        </div>
+
+        <div class="ring-wrap">
+          <div class="ring partial">
+            <svg viewBox="0 0 100 100">
+              <!-- Track -->
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+              <!-- Progress: 60% of circumference 2π·42 ≈ 263.9, so dasharray = 158.4 105.5 -->
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#F85C1E" stroke-width="9"
+                      stroke-linecap="round"
+                      stroke-dasharray="158.4 263.9"
+                      stroke-dashoffset="0"/>
+            </svg>
+            <div class="center">
+              <div class="pct">60%</div>
+              <div class="frac">3 / 5</div>
+              <div class="pts">+18 pts</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="habits-hdr">
+          <span class="title">TODAY'S HABITS</span>
+          <span class="meta">3 / 5 · +18 pts</span>
+        </div>
+
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Morning meditation</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Drink 64 oz water</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Read 20 minutes</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row">
+          <div class="check"></div>
+          <div class="name">Walk 30 minutes</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row">
+          <div class="check"></div>
+          <div class="name">Sleep before 11 PM</div>
+          <div class="pts">+6 pts</div>
+        </div>
+
+        <div class="nav">
+          <div class="tab active">Today</div>
+          <div class="tab">Streak</div>
+          <div class="tab">Board</div>
+          <div class="tab">Group</div>
+        </div>
+      </div>
+      <div class="rule">
+        Color rule: orange = aggregate-progress (in flight). Streak pill and "Today's<br/>
+        Habits" sub-header stay orange in both states.
+      </div>
+    </div>
+
+    <!-- ============================ FULL · 5/5 ============================ -->
+    <div class="col">
+      <div class="col-label">
+        <div class="tag">FULL · 5 OF 5 DONE</div>
+        <div class="sub">Ring + "+pts" swap to teal (matches rows)</div>
+      </div>
+      <div class="phone full">
+        <div class="header">
+          <div class="greeting">
+            <h1>Good evening,<br/>Dan</h1>
+            <div class="date">Mon · Jun 8</div>
+          </div>
+          <div class="streak"><span class="flame">🔥</span> 13-day<br/>streak</div>
+        </div>
+
+        <div class="ring-wrap">
+          <div class="ring full">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#2A2A2A" stroke-width="9"/>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#14B8A6" stroke-width="9"
+                      stroke-linecap="round"
+                      stroke-dasharray="263.9 263.9"
+                      stroke-dashoffset="0"/>
+            </svg>
+            <div class="center">
+              <div class="pct">100%</div>
+              <div class="frac">5 / 5</div>
+              <div class="pts">+30 pts</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="habits-hdr">
+          <span class="title">TODAY'S HABITS</span>
+          <span class="meta">5 / 5 · +30 pts 🎉</span>
+        </div>
+
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Morning meditation</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Drink 64 oz water</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Read 20 minutes</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Walk 30 minutes</div>
+          <div class="pts">+6 pts</div>
+        </div>
+        <div class="row checked">
+          <div class="check"><svg viewBox="0 0 14 14" width="14" height="14"><path d="M2 7 L6 11 L12 3" stroke="#14B8A6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="name">Sleep before 11 PM</div>
+          <div class="pts">+6 pts</div>
+        </div>
+
+        <div class="nav">
+          <div class="tab active">Today</div>
+          <div class="tab">Streak</div>
+          <div class="tab">Board</div>
+          <div class="tab">Group</div>
+        </div>
+      </div>
+      <div class="rule">
+        Color rule: teal = closed-day celebration. Ring + "+pts" swap to teal once<br/>
+        <code>completed === total</code>. Per-row teal already matched.
+      </div>
+    </div>
+
+  </div>
+  <div class="attribution">made with <a href="https://tycoon.us">Tycoon.us</a> · <a href="https://tycoon.us">superagent</a></div>
+</div>
+</body>
+</html>
