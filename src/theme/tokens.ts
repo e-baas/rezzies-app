@@ -140,13 +140,17 @@ export const shadow = {
 
 // === Ring configuration ===
 // 5-segment ring per v2 mockup — segments separated by small gaps.
+// Fill color: ORANGE (#F85C1E) per chairman post-checkpoint decision (TYC-137).
+// Semantic split: orange = aggregate progress (ring + streak + monthly bonus),
+// teal = per-row / per-tab secondary. Style Spec §6.1 specifies --rz-primary
+// for ring fill; this aligns the implementation with the doc.
 export const ring = {
   segments: 5,
   gapDeg: 10,        // visual gap between segments
   size: 200,
   stroke: 12,
   trackColor: '#2A2A2A',
-  fillColor: '#14B8A6',
+  fillColor: '#F85C1E', // primary orange — aggregate-progress signal
 };
 
 export const tokens = {

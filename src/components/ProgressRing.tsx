@@ -1,7 +1,9 @@
 // ProgressRing — 5-segment animated ring per V2 Mockup Doc (cmq4pc61f0023s6012xi1uoh9).
 // Visually distinct from Apple Fitness (continuous arc) and Strava — five rounded
-// arc segments separated by 10° gaps; completed segments fill with teal (`secondary`)
-// and pop in 80ms-staggered springs on mount.
+// arc segments separated by 10° gaps; completed segments fill with orange
+// (`primary`, post-checkpoint TYC-137) and pop in 80ms-staggered springs.
+// Aggregate-progress semantic: ring + streak + monthly bonus all in orange;
+// teal stays as per-row / per-tab secondary signal.
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   points: {
     fontSize: 17,
     fontWeight: '700',
-    color: c.secondary,
+    color: c.primary, // orange — aligns with ring fill (aggregate-progress signal)
     marginTop: 6,
     fontVariant: ['tabular-nums'],
   },
