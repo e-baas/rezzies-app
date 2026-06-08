@@ -5,6 +5,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useProgramStore } from '../src/stores/programStore';
+import { c, radii, space } from '../src/theme/tokens';
+
+// Visual polish v2 (TYC-137): dark canvas, orange primary CTA, teal
+// accent for cancel-text hover affinity; invite code is the only
+// monospaced moment so it gets generous letter-spacing.
 
 export default function JoinProgram() {
   const [inviteCode, setInviteCode] = useState('');
@@ -29,7 +34,10 @@ export default function JoinProgram() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
       <View style={styles.inner}>
         <Text style={styles.emoji}>🔗</Text>
         <Text style={styles.title}>Join a Program</Text>
@@ -41,14 +49,21 @@ export default function JoinProgram() {
           style={styles.input}
           value={inviteCode}
           onChangeText={setInviteCode}
-          placeholder="Invite code (e.g., A1B2C3)"
-          placeholderTextColor="#9CA3AF"
+          placeholder="A1B2C3"
+          placeholderTextColor={c.text3}
           autoCapitalize="characters"
           autoCorrect={false}
+          maxLength={8}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleJoin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Joining...' : 'Join Program'}</Text>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleJoin}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Joining…' : 'Join Program'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.cancel} onPress={() => router.back()}>
@@ -60,20 +75,48 @@ export default function JoinProgram() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
-  emoji: { fontSize: 48, textAlign: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1F2937', textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginTop: 8, marginBottom: 32, lineHeight: 20 },
+  container: { flex: 1, backgroundColor: c.bg },
+  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: space.xxxl },
+  emoji: { fontSize: 56, textAlign: 'center', marginBottom: space.lg },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: c.text,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: c.text2,
+    textAlign: 'center',
+    marginTop: space.sm,
+    marginBottom: space.xxxl,
+    lineHeight: 20,
+    paddingHorizontal: space.md,
+  },
   input: {
-    backgroundColor: 'white', borderRadius: 12, padding: 16, fontSize: 20, color: '#1F2937',
-    borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 16, textAlign: 'center',
-    letterSpacing: 4, fontWeight: '700',
+    backgroundColor: c.surface,
+    borderRadius: radii.md,
+    padding: space.lg,
+    fontSize: 22,
+    color: c.text,
+    borderWidth: 1,
+    borderColor: c.border,
+    marginBottom: space.lg,
+    textAlign: 'center',
+    letterSpacing: 6,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
   },
   button: {
-    backgroundColor: '#6366F1', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 12,
+    backgroundColor: c.primary,
+    borderRadius: radii.md,
+    padding: space.lg,
+    alignItems: 'center',
+    marginBottom: space.md,
   },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '700' },
-  cancel: { alignItems: 'center', paddingVertical: 8 },
-  cancelText: { color: '#6B7280', fontSize: 14 },
+  buttonDisabled: { opacity: 0.55 },
+  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  cancel: { alignItems: 'center', paddingVertical: space.sm },
+  cancelText: { color: c.text2, fontSize: 14, fontWeight: '500' },
 });

@@ -5,6 +5,12 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { useHabitStore } from '../../src/stores/habitStore';
 import { LeaderboardRow } from '../../src/components/LeaderboardRow';
 import { supabase } from '../../src/lib/supabase';
+import { c, radii, space } from '../../src/theme/tokens';
+
+// Visual polish v2 (TYC-137): dark canvas, orange RefreshControl tint
+// (orange = aggregate-progress signal — pulling for fresh standings is
+// inherently an aggregate-progress action), column headers in muted
+// uppercase, tabular nums in stat values via LeaderboardRow.
 
 export default function LeaderboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -47,7 +53,14 @@ export default function LeaderboardScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={c.primary}
+          colors={[c.primary]}
+        />
+      }
     >
       <View style={styles.header}>
         <Text style={styles.title}>Leaderboard</Text>
@@ -57,7 +70,7 @@ export default function LeaderboardScreen() {
       {/* Column header */}
       <View style={styles.colHeader}>
         <Text style={[styles.colHeaderText, { width: 36 }]}>#</Text>
-        <Text style={[styles.colHeaderText, { flex: 1, marginLeft: 44 }]}>Name</Text>
+        <Text style={[styles.colHeaderText, { flex: 1, marginLeft: 44, textAlign: 'left' }]}>Name</Text>
         <Text style={[styles.colHeaderText, { width: 52 }]}>Month</Text>
         <Text style={[styles.colHeaderText, { width: 52 }]}>Year</Text>
         <Text style={[styles.colHeaderText, { width: 52 }]}>Pts</Text>
@@ -81,19 +94,53 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  content: { padding: 16, paddingBottom: 40 },
-  header: { marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '800', color: '#1F2937' },
-  subtitle: { fontSize: 13, color: '#6B7280', marginTop: 4 },
-  colHeader: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8,
-    marginBottom: 4,
+  container: { flex: 1, backgroundColor: c.bg },
+  content: { padding: space.lg, paddingBottom: space.huge },
+  header: { marginBottom: space.lg },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: c.text,
+    letterSpacing: -0.4,
   },
-  colHeaderText: { fontSize: 11, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', textAlign: 'center' },
-  empty: { flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#1F2937', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center' },
-  emptyState: { alignItems: 'center', paddingVertical: 40 },
+  subtitle: {
+    fontSize: 13,
+    color: c.text2,
+    marginTop: space.xs,
+  },
+  colHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    marginBottom: space.xs,
+  },
+  colHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: c.text3,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    letterSpacing: 0.6,
+  },
+  empty: {
+    flex: 1,
+    backgroundColor: c.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: space.xxxl,
+  },
+  emptyEmoji: { fontSize: 64, marginBottom: space.lg },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: c.text,
+    marginBottom: space.sm,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: c.text2,
+    textAlign: 'center',
+  },
+  emptyState: { alignItems: 'center', paddingVertical: space.huge },
 });

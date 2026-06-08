@@ -1,6 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { LeaderboardEntry } from '../types';
+import { c, radii, space } from '../theme/tokens';
+
+// Visual polish v2 (TYC-137):
+// - Row card on c.surface + c.border (no more white-on-light)
+// - Current-user self-row highlighted with teal-soft (matches home
+//   row-fill teal — consistent completion/self-state semantic)
+// - Streak text in orange (c.primary): streak IS aggregate progress
+// - Stat values tabular-nums so columns visually align across rows
+// - Style spec doc cmpze514302chs6013gkajwqr §4
 
 interface Props {
   entry: LeaderboardEntry;
@@ -10,10 +19,16 @@ interface Props {
 const rankEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 export function LeaderboardRow({ entry, isCurrentUser }: Props) {
+  const numericRank = !rankEmojis[entry.rank];
   return (
     <View style={[styles.row, isCurrentUser && styles.rowHighlight]}>
       <View style={styles.rankCol}>
-        <Text style={styles.rankText}>
+        <Text
+          style={[
+            styles.rankText,
+            numericRank && styles.rankNumeric,
+          ]}
+        >
           {rankEmojis[entry.rank] || entry.rank}
         </Text>
       </View>
@@ -52,16 +67,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: space.md,
     marginBottom: 6,
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: c.surface,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: c.border,
   },
   rowHighlight: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#C7D2FE',
+    backgroundColor: c.secondarySoft,
+    borderColor: c.secondary,
   },
   rankCol: {
     width: 36,
@@ -70,24 +85,29 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#4B5563',
+    color: c.text,
+  },
+  rankNumeric: {
+    color: c.text2,
+    fontVariant: ['tabular-nums'],
   },
   nameCol: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: space.sm,
   },
   name: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontWeight: '700',
+    color: c.text,
   },
   nameHighlight: {
-    color: '#4338CA',
+    color: c.secondary,
   },
   streak: {
     fontSize: 12,
-    color: '#F59E0B',
+    color: c.primary,
     marginTop: 2,
+    fontWeight: '600',
   },
   statCol: {
     width: 52,
@@ -96,13 +116,15 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
+    color: c.text,
+    fontVariant: ['tabular-nums'],
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '500',
-    color: '#9CA3AF',
+    fontWeight: '600',
+    color: c.text3,
     textTransform: 'uppercase',
     marginTop: 1,
+    letterSpacing: 0.4,
   },
 });
