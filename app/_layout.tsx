@@ -5,9 +5,12 @@ import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '../src/stores/authStore';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { installErrorReporter } from '../src/lib/errorReporter';
+import { initSentry } from '../src/lib/sentry';
 
 // Wire global JS error + unhandled-promise capture as early as possible.
 installErrorReporter();
+// Init Sentry for native crash capture (no-op if DSN not configured).
+initSentry();
 
 export default function RootLayout() {
   const { user, loading, loadSession } = useAuthStore();
