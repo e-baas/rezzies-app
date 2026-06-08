@@ -140,17 +140,21 @@ export const shadow = {
 
 // === Ring configuration ===
 // 5-segment ring per v2 mockup — segments separated by small gaps.
-// Fill color: ORANGE (#F85C1E) per chairman post-checkpoint decision (TYC-137).
-// Semantic split: orange = aggregate progress (ring + streak + monthly bonus),
-// teal = per-row / per-tab secondary. Style Spec §6.1 specifies --rz-primary
-// for ring fill; this aligns the implementation with the doc.
+// Two-state fill (TYC-137, chairman directive 2026-06-08):
+//   • PARTIAL progress  -> orange (#F85C1E) — aggregate-progress signal,
+//     matches streak + monthly bonus.
+//   • FULL completion   -> teal   (#14B8A6) — celebrates the daily close,
+//     consistent with the per-row completed state.
+// Style Spec §6.1 specifies --rz-primary for ring fill in the steady state;
+// the full-completion teal is an explicit semantic accent on top.
 export const ring = {
   segments: 5,
   gapDeg: 10,        // visual gap between segments
   size: 200,
   stroke: 12,
   trackColor: '#2A2A2A',
-  fillColor: '#F85C1E', // primary orange — aggregate-progress signal
+  fillColor: '#F85C1E',         // partial-progress orange
+  fillColorComplete: '#14B8A6', // full-completion teal (matches row + tab)
 };
 
 export const tokens = {

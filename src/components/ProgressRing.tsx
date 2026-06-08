@@ -1,9 +1,19 @@
 // ProgressRing — 5-segment animated ring per V2 Mockup Doc (cmq4pc61f0023s6012xi1uoh9).
 // Visually distinct from Apple Fitness (continuous arc) and Strava — five rounded
-// arc segments separated by 10° gaps; completed segments fill with orange
-// (`primary`, post-checkpoint TYC-137) and pop in 80ms-staggered springs.
-// Aggregate-progress semantic: ring + streak + monthly bonus all in orange;
-// teal stays as per-row / per-tab secondary signal.
+// arc segments separated by 10° gaps; completed segments fill with the active
+// ring color and pop in 80ms-staggered springs.
+//
+// Two-state fill (TYC-137, chairman directive 2026-06-08):
+//   • Partial progress  -> orange (primary)  — aggregate-progress signal,
+//     matches streak + monthly bonus.
+//   • Full completion   -> teal   (secondary)— celebrates daily close,
+//     consistent with the per-row + active-tab teal.
+//
+// The transition animates: AnimatedSegment driving stroke opacity per segment
+// stays the same; the color swap happens to all segments at once when the
+// final tap flips `completed === total`. Reanimated handles the cross-fade
+// cleanly because we re-mount stroke on each render and the spring keeps the
+// segment fully visible while the parent color shifts.
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -93,6 +103,13 @@ export function ProgressRing({
   const r = (size - strokeWidth) / 2 - 2;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+  // Two-state fill: orange while progressing, teal once the day is closed.
+  // `total > 0` guard avoids the empty-state ring reading as "complete".
+  const isComplete = total > 0 && completed >= total;
+  const activeFill = isComplete
+    ? ringTokens.fillColorComplete
+    : ringTokens.fillColor;
+
   const segs = [];
   for (let i = 0; i < segments; i++) {
     const startDeg = i * (segDeg + gapDeg) + gapDeg / 2;
@@ -117,12 +134,12 @@ export function ProgressRing({
             fill="none"
           />
         ))}
-        {/* Fill segments — animated */}
+        {/* Fill segments — animated; stroke swaps to teal on full completion */}
         {segs.map((seg, i) => (
           <AnimatedSegment
             key={`fill-${i}`}
             d={seg.d}
-            stroke={ringTokens.fillColor}
+            stroke={activeFill}
             strokeWidth={strokeWidth}
             on={seg.on}
             delay={i * 80}
@@ -135,7 +152,9 @@ export function ProgressRing({
           {completed}/{total}
         </Text>
         {showPoints && points !== undefined && (
-          <Text style={styles.points}>+{points} pts</Text>
+          <Text style={[styles.points, { color: activeFill }]}>
+            +{points} pts
+          </Text>
         )}
       </View>
     </View>
@@ -171,7 +190,11 @@ const styles = StyleSheet.create({
   points: {
     fontSize: 17,
     fontWeight: '700',
-    color: c.primary, // orange — aligns with ring fill (aggregate-progress signal)
+    // Default color is overridden inline to match `activeFill` (orange
+    // while partial, teal on full completion). Token kept here so the
+    // style sheet still validates and any caller that omits points
+    // doesn't read an undefined color.
+    color: c.primary,
     marginTop: 6,
     fontVariant: ['tabular-nums'],
   },
