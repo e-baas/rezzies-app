@@ -6,11 +6,19 @@ import { useAuthStore } from '../src/stores/authStore';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { installErrorReporter } from '../src/lib/errorReporter';
 import { initSentry } from '../src/lib/sentry';
+import {
+  setupNotificationHandler,
+  setupNotificationTapHandler,
+  registerForPushNotifications,
+  syncTimezone,
+} from '../src/lib/notifications';
 
 // Wire global JS error + unhandled-promise capture as early as possible.
 installErrorReporter();
 // Init Sentry for native crash capture (no-op if DSN not configured).
 initSentry();
+// Configure notification behavior (foreground presentation).
+setupNotificationHandler();
 
 export default function RootLayout() {
   const { user, loading, loadSession } = useAuthStore();
@@ -18,6 +26,16 @@ export default function RootLayout() {
   useEffect(() => {
     loadSession();
   }, []);
+
+  // Initialize notifications + timezone sync when user is authenticated
+  useEffect(() => {
+    if (!user) return;
+
+    // Register for push notifications + sync timezone (fire-and-forget)
+    registerForPushNotifications();
+    syncTimezone();
+    setupNotificationTapHandler();
+  }, [user]);
 
   if (loading) {
     return (
@@ -37,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
         )}
         <Stack.Screen name="report-bug" options={{ headerShown: true, title: 'Report a Bug', presentation: 'modal' }} />
+        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications', presentation: 'modal' }} />
       </Stack>
     </ErrorBoundary>
   );

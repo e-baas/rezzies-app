@@ -33,7 +33,15 @@
     },
     "plugins": [
       "expo-router",
-      "sentry-expo"
+      "sentry-expo",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6366F1",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

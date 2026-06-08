@@ -1,0 +1,11 @@
+# Rezzies Supabase Configuration
+# Used by `supabase functions deploy` CLI
+
+project_id = "umnowggiuiotsgsnvvuj"
+
+[functions.notification-scheduler]
+enabled = true
+
+[ edge_function ]
+# Deno.cron requires this setting in the edge function runtime
+# Supabase supports Deno.cron as of 2024
