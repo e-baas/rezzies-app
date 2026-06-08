@@ -45,6 +45,19 @@ async function main() {
   const c = new Client({ connectionString: process.env.SUPABASE_DB_URL, ssl: { rejectUnauthorized: false } });
   await c.connect();
 
+  // Skip-if-empty guard (memory:rule cmq4acnh9001bs601y58mjgv4).
+  // The prior hourly cadence fired 22 times/day on an empty bug DB and burned
+  // credits via auto-topup. Daily cadence + this guard fixes both: no rows
+  // means no Doc PATCH, no token spend, no inbox noise. Allow forcing via
+  // FORCE_REFRESH=1 when the chairman/dev wants to write the empty-state Doc.
+  const totalRes = await c.query('SELECT COUNT(*)::int AS n FROM bug_reports');
+  const totalRows = totalRes.rows[0]?.n || 0;
+  if (totalRows === 0 && !process.env.FORCE_REFRESH) {
+    await c.end();
+    console.log('no new bug reports — skipping refresh');
+    return;
+  }
+
   const counts = await c.query(
     "SELECT status, COUNT(*)::int AS n FROM bug_reports GROUP BY status ORDER BY status"
   );
