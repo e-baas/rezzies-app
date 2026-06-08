@@ -1,6 +1,10 @@
+// BonusProgress — Monthly bonus card on dark, with orange progress fill.
+// Replaces the legacy amber-on-light treatment.
+
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { MonthlyBonus, BonusProgress as BonusProgressType } from '../types';
+import { c, radii, text as textTokens, space } from '../theme/tokens';
 
 interface Props {
   bonuses: MonthlyBonus[];
@@ -11,13 +15,10 @@ export function BonusProgressList({ bonuses, progress }: Props) {
   const progressMap: Record<string, BonusProgressType> = {};
   progress.forEach((p) => { progressMap[p.bonus_id] = p; });
 
-  // Show only current month's bonus
   const now = new Date();
   const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  // For simplicity, show the bonus matching the current month index
   const currentBonus = bonuses[currentMonth];
+
   if (!currentBonus) {
     return (
       <View style={styles.container}>
@@ -30,15 +31,18 @@ export function BonusProgressList({ bonuses, progress }: Props) {
   const bp = progressMap[currentBonus.id];
   const current = bp?.current || 0;
   const pct = Math.min(1, current / currentBonus.target);
+  const completed = !!bp?.completed;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Monthly Bonus</Text>
       <View style={styles.card}>
-        <Text style={styles.bonusName}>{currentBonus.name}</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.bonusName}>{currentBonus.name}</Text>
+          {completed && <Text style={styles.completePill}>✓ Done</Text>}
+        </View>
         <Text style={styles.bonusDesc}>{currentBonus.description}</Text>
 
-        {/* Progress bar */}
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${Math.round(pct * 100)}%` as any }]} />
         </View>
@@ -47,9 +51,7 @@ export function BonusProgressList({ bonuses, progress }: Props) {
           <Text style={styles.statValue}>
             {current} / {currentBonus.target} {currentBonus.unit}
           </Text>
-          <Text style={styles.statAward}>
-            {bp?.completed ? '✓ Completed! ' : ''}+{currentBonus.award} pts
-          </Text>
+          <Text style={styles.statAward}>+{currentBonus.award} pts</Text>
         </View>
       </View>
     </View>
@@ -58,62 +60,75 @@ export function BonusProgressList({ bonuses, progress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: space.lg,
     marginBottom: 20,
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
+    color: c.text,
     marginBottom: 12,
+    letterSpacing: -0.2,
   },
   empty: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: c.text3,
     fontStyle: 'italic',
   },
   card: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 16,
+    backgroundColor: c.surface,
+    borderRadius: radii.lg,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: c.border,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   bonusName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#92400E',
+    color: c.text,
+  },
+  completePill: {
+    color: c.secondary,
+    fontWeight: '700',
+    fontSize: 13,
   },
   bonusDesc: {
     fontSize: 13,
-    color: '#A16207',
+    color: c.text2,
     marginTop: 4,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#FDE68A',
+    backgroundColor: c.elev,
     borderRadius: 4,
-    marginTop: 12,
+    marginTop: 14,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#F59E0B',
+    backgroundColor: c.primary,
     borderRadius: 4,
   },
   stats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 10,
   },
   statValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#92400E',
+    color: c.text2,
+    fontVariant: ['tabular-nums'],
   },
   statAward: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#D97706',
+    color: c.primary,
+    fontVariant: ['tabular-nums'],
   },
 });

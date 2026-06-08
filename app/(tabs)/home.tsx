@@ -9,6 +9,7 @@ import { HabitChecklist } from '../../src/components/HabitChecklist';
 import { BonusProgressList } from '../../src/components/BonusProgress';
 import { supabase } from '../../src/lib/supabase';
 import { calculateDailyPoints } from '../../src/engine/scoring';
+import { c, radii, space } from '../../src/theme/tokens';
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
@@ -18,13 +19,15 @@ export default function HomeScreen() {
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [streakLongest, setStreakLongest] = useState(0);
+  const [monthPoints, setMonthPoints] = useState(0);
+  const [groupRank, setGroupRank] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     const { data: participant } = await supabase
       .from('participants')
-      .select('id, program_id, current_streak, streak_longest')
+      .select('id, program_id, current_streak, streak_longest, total_points')
       .eq('user_id', user.id)
       .order('joined_at', { ascending: false })
       .limit(1)
@@ -35,12 +38,28 @@ export default function HomeScreen() {
     setParticipantId(participant.id);
     setStreak(participant.current_streak || 0);
     setStreakLongest(participant.streak_longest || 0);
+    setMonthPoints(participant.total_points || 0);
 
     await Promise.all([
       loadProgram(participant.program_id),
       loadHabits(participant.program_id),
       loadBonuses(participant.program_id),
     ]);
+
+    // Best-effort group rank: rank among participants in the same program by total_points desc.
+    try {
+      const { data: peers } = await supabase
+        .from('participants')
+        .select('id, total_points')
+        .eq('program_id', participant.program_id)
+        .order('total_points', { ascending: false });
+      if (peers) {
+        const idx = peers.findIndex((p: any) => p.id === participant.id);
+        setGroupRank(idx >= 0 ? idx + 1 : null);
+      }
+    } catch {
+      // Rank is decorative; failures are silent.
+    }
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -59,25 +78,13 @@ export default function HomeScreen() {
     if (participantId && habits.length > 0) {
       await loadTodayChecks(participantId, habits.map((h) => h.id));
     }
-    // Refetch streak
-    if (participantId) {
-      const { data: p } = await supabase
-        .from('participants')
-        .select('current_streak, streak_longest')
-        .eq('id', participantId)
-        .single();
-      if (p) {
-        setStreak(p.current_streak || 0);
-        setStreakLongest(p.streak_longest || 0);
-      }
-    }
     setRefreshing(false);
   };
 
-  const checkedCount = todayChecks.filter((c) => c.checked).length;
+  const checkedCount = todayChecks.filter((ck) => ck.checked).length;
   const totalHabits = habits.length;
   const dailyPoints = calculateDailyPoints(
-    todayChecks.filter((c) => c.checked).map((c) => c.habit_id),
+    todayChecks.filter((ck) => ck.checked).map((ck) => ck.habit_id),
     habits
   );
 
@@ -102,35 +109,49 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.secondary} />
+      }
     >
-      {/* Program name + Streak header */}
-      <View style={styles.header}>
+      {/* Program name + streak pill */}
+      <View style={styles.programHeader}>
         {currentProgram && (
-          <Text style={styles.programName}>{currentProgram.name}</Text>
+          <Text style={styles.programName} numberOfLines={1}>{currentProgram.name}</Text>
         )}
-        <View style={styles.streakRow}>
-          <View style={styles.streakBadge}>
-            <Text style={styles.streakEmoji}>🔥</Text>
-            <Text style={styles.streakText}>{streak} day streak</Text>
-          </View>
-          {streakLongest > streak && (
-            <Text style={styles.streakBest}>Best: {streakLongest} days</Text>
-          )}
+        <View style={styles.streakPill}>
+          <Text style={styles.streakEmoji}>🔥</Text>
+          <Text style={styles.streakNum}>{streak}</Text>
         </View>
       </View>
 
-      {/* Progress Ring */}
-      <View style={styles.ringContainer}>
+      {/* Ring card */}
+      <View style={styles.ringCard}>
         <ProgressRing
           completed={checkedCount}
           total={totalHabits}
-          color="#6366F1"
           points={dailyPoints.points}
         />
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>+{dailyPoints.points}</Text>
+            <Text style={styles.statLabel}>today</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>{monthPoints.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>this month</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={styles.statValue}>
+              {groupRank !== null ? `#${groupRank}` : '—'}
+            </Text>
+            <Text style={styles.statLabel}>group rank</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Daily Habit Checklist */}
+      {/* Daily habits */}
       <HabitChecklist
         habits={habits}
         checks={todayChecks}
@@ -139,7 +160,7 @@ export default function HomeScreen() {
 
       <View style={styles.divider} />
 
-      {/* Monthly Bonus */}
+      {/* Monthly bonus */}
       <BonusProgressList
         bonuses={monthlyBonuses}
         progress={bonusProgress}
@@ -149,66 +170,110 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: c.bg },
   content: { paddingBottom: 40 },
-  header: {
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+  programHeader: {
+    paddingHorizontal: space.lg,
+    paddingTop: 16,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   programName: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 8,
+    color: c.text,
+    letterSpacing: -0.2,
+    marginRight: 12,
   },
-  streakRow: {
+  streakPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: c.primarySoft,
+    borderWidth: 1,
+    borderColor: c.primary,
+  },
+  streakEmoji: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  streakNum: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: c.primary,
+    fontVariant: ['tabular-nums'],
+  },
+  ringCard: {
+    alignItems: 'center',
+    paddingHorizontal: space.lg,
+    paddingTop: 24,
+    paddingBottom: 28,
+  },
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 28,
+    paddingHorizontal: space.xl,
   },
-  streakBadge: {
-    flexDirection: 'row',
+  stat: {
+    flex: 1,
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
   },
-  streakEmoji: {
-    fontSize: 16,
-    marginRight: 4,
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: c.text,
+    letterSpacing: -0.4,
+    fontVariant: ['tabular-nums'],
   },
-  streakText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#92400E',
-  },
-  streakBest: {
+  statLabel: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: c.text3,
+    marginTop: 2,
     fontWeight: '500',
   },
-  ringContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    backgroundColor: 'white',
-    marginBottom: 12,
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: c.border,
   },
-  divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 12, marginHorizontal: 16 },
+  divider: {
+    height: 1,
+    backgroundColor: c.border,
+    marginVertical: 16,
+    marginHorizontal: space.lg,
+  },
   emptyContainer: {
-    flex: 1, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center', padding: 32,
+    flex: 1,
+    backgroundColor: c.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
   },
   emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyTitle: { fontSize: 22, fontWeight: '700', color: '#1F2937', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 24 },
+  emptyTitle: { fontSize: 22, fontWeight: '700', color: c.text, marginBottom: 8 },
+  emptyText: { fontSize: 14, color: c.text2, textAlign: 'center', marginBottom: 24 },
   ctaButton: {
-    backgroundColor: '#6366F1', borderRadius: 12, paddingHorizontal: 32, paddingVertical: 14, marginBottom: 12,
+    backgroundColor: c.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    marginBottom: 12,
   },
   ctaText: { color: 'white', fontSize: 16, fontWeight: '700' },
   ctaOutline: {
-    borderWidth: 1, borderColor: '#6366F1', borderRadius: 12, paddingHorizontal: 32, paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: c.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
   },
-  ctaOutlineText: { color: '#6366F1', fontSize: 16, fontWeight: '600' },
+  ctaOutlineText: { color: c.primary, fontSize: 16, fontWeight: '600' },
 });

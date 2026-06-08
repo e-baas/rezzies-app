@@ -1,46 +1,48 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { c } from '../../src/theme/tokens';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: '#0F172A' },
-        headerTintColor: 'white',
+        headerStyle: { backgroundColor: c.bg, shadowOpacity: 0, elevation: 0 },
+        headerTintColor: c.text,
+        headerTitleStyle: { fontWeight: '800', letterSpacing: -0.4, fontSize: 18 },
         tabBarStyle: {
-          backgroundColor: '#0F172A',
-          borderTopColor: '#1E293B',
+          backgroundColor: c.bg,
+          borderTopColor: c.border,
           height: 60,
           paddingBottom: 8,
         },
-        tabBarActiveTintColor: '#6366F1',
-        tabBarInactiveTintColor: '#6B7280',
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarActiveTintColor: c.secondary,
+        tabBarInactiveTintColor: c.text3,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Daily Check-in',
-          headerTitle: '🏆 The Rezzies',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>✅</Text>,
+          title: 'Today',
+          headerTitle: 'Rezzies',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>●</Text>,
         }}
       />
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: 'Leaderboard',
-          headerTitle: '🏆 The Rezzies',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏅</Text>,
+          title: 'Leaders',
+          headerTitle: 'Rezzies',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>▲</Text>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          headerTitle: '🏆 The Rezzies',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
+          title: 'You',
+          headerTitle: 'Rezzies',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◆</Text>,
         }}
       />
     </Tabs>
