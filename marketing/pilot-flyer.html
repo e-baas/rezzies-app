@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rezzies — Friends &amp; Family Pilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     DESIGN SYSTEM — Rezzies Pilot Flyer
+     ------------------------------------------------------------
+     COLOR
+       --ink        #0F172A   page background (brand dark)
+       --ink-2      #0B1120   deepest panel
+       --surface    #16233B   raised card
+       --border     rgba(255,255,255,.09)
+       --teal       #14B8A6   brand primary
+       --teal-2     #2DD4BF   bright accent / gradient top
+       --teal-soft  rgba(20,184,166,.14)
+       --orange     #F85C1E   energy / prize accent
+       --gold       #F5B301   prize / trophy
+       --text       #F8FAFC
+       --text-2     #94A3B8   muted
+     TYPE  Inter. Display 900, body 400-600.
+       hero 64px / section head 26px / body 14.5px / micro 10.5px
+     RADIUS 10 / 18 / 26   SPACING 4-base scale
+     ============================================================ */
+  :root{
+    --ink:#0F172A; --ink-2:#0B1120; --surface:#16233B;
+    --border:rgba(255,255,255,.09);
+    --teal:#14B8A6; --teal-2:#2DD4BF; --teal-soft:rgba(20,184,166,.14);
+    --orange:#F85C1E; --gold:#F5B301;
+    --text:#F8FAFC; --text-2:#94A3B8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ -webkit-font-smoothing:antialiased; }
+  body{ font-family:'Inter',system-ui,sans-serif; background:#070b14; color:var(--text); }
+
+  @page{ size:8.5in 11in; margin:0; }
+
+  .page{
+    width:8.5in; height:11in; margin:0 auto;
+    background:
+      radial-gradient(120% 70% at 82% -8%, rgba(20,184,166,.22) 0%, rgba(20,184,166,0) 55%),
+      radial-gradient(95% 60% at 8% 108%, rgba(248,92,30,.16) 0%, rgba(248,92,30,0) 55%),
+      linear-gradient(180deg,#0F172A 0%, #0B1120 100%);
+    position:relative; overflow:hidden;
+    padding:0.46in 0.5in 0.34in;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------- header ---------- */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; }
+  .logo{ height:34px; width:auto; display:block; }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:10.5px; font-weight:800; letter-spacing:.13em;
+    color:#042b27; background:linear-gradient(180deg,var(--teal-2),var(--teal));
+    padding:8px 14px; border-radius:999px;
+    box-shadow:0 4px 16px rgba(20,184,166,.35);
+  }
+  .pill .dot{ width:6px; height:6px; border-radius:50%; background:#042b27; }
+
+  /* ---------- hero ---------- */
+  .hero{ margin-top:20px; }
+  .eyebrow{
+    font-size:11px; font-weight:800; letter-spacing:.2em;
+    color:var(--teal-2); text-transform:uppercase; margin-bottom:12px;
+  }
+  .hero h1{
+    font-size:62px; line-height:.96; font-weight:900; letter-spacing:-.025em;
+  }
+  .hero h1 .vs{
+    color:var(--orange);
+    -webkit-text-stroke:0;
+  }
+  .hero h1 .them{
+    background:linear-gradient(92deg,var(--teal-2),var(--teal));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .lede{
+    margin-top:14px; max-width:6.0in;
+    font-size:15px; line-height:1.5; font-weight:500; color:#CBD5E1;
+  }
+  .lede b{ color:var(--text); font-weight:700; }
+
+  /* ---------- showcase (phones) ---------- */
+  .showcase{
+    position:relative; height:2.66in; margin:16px 0 8px; overflow:hidden;
+  }
+  .phone{
+    position:absolute; border-radius:22px; overflow:hidden;
+    background:#000; border:4px solid #1f2c44;
+    box-shadow:0 22px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04);
+  }
+  .phone img{ display:block; width:100%; height:100%; object-fit:cover; object-position:top; }
+  .phone.p1{ width:1.30in; height:2.58in; left:0.16in; top:0.04in; transform:rotate(-6deg); z-index:2; }
+  .phone.p2{ width:1.30in; height:2.58in; left:1.55in; top:0.01in; transform:rotate(4deg); z-index:1; }
+
+  .trophy{
+    position:absolute; right:0.0in; top:0.24in; z-index:3;
+    width:3.06in; border-radius:20px; overflow:hidden;
+    background:linear-gradient(180deg,#16233B,#0e1830);
+    border:1px solid var(--border);
+    box-shadow:0 20px 40px rgba(0,0,0,.5);
+    padding:13px 13px 12px;
+  }
+  .trophy img{ display:block; width:100%; border-radius:12px; }
+  .trophy .cap{
+    margin-top:10px; font-size:11px; font-weight:700; letter-spacing:.04em;
+    color:var(--text-2); text-align:center;
+  }
+  .trophy .cap b{ color:var(--gold); }
+
+  /* ---------- pitch strip ---------- */
+  .pitch{
+    display:flex; gap:10px; margin-top:6px;
+  }
+  .chip{
+    flex:1; background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:12px 14px;
+  }
+  .chip .k{ font-size:21px; font-weight:900; color:var(--teal-2); letter-spacing:-.02em; }
+  .chip .v{ font-size:11.5px; font-weight:600; color:var(--text-2); margin-top:3px; line-height:1.35; }
+
+  /* ---------- prizes ---------- */
+  .section-h{
+    display:flex; align-items:center; gap:10px; margin:18px 0 11px;
+    font-size:13px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--text-2);
+  }
+  .section-h::before{ content:""; width:18px; height:3px; border-radius:2px; background:var(--orange); }
+
+  .prizes{ display:flex; gap:12px; }
+  .prize{
+    flex:1; position:relative; border-radius:18px; padding:16px 17px;
+    background:linear-gradient(180deg, rgba(20,184,166,.12), rgba(20,184,166,.03));
+    border:1px solid rgba(20,184,166,.30);
+    overflow:hidden;
+  }
+  .prize.fam{
+    background:linear-gradient(180deg, rgba(248,92,30,.14), rgba(248,92,30,.03));
+    border-color:rgba(248,92,30,.34);
+  }
+  .prize .amt{
+    font-size:34px; font-weight:900; letter-spacing:-.03em; line-height:1;
+    color:var(--teal-2);
+  }
+  .prize.fam .amt{ color:var(--orange); }
+  .prize .amt small{ font-size:14px; font-weight:800; vertical-align:top; }
+  .prize .who{ margin-top:8px; font-size:13px; font-weight:800; color:var(--text); }
+  .prize .sub{ margin-top:3px; font-size:11.5px; font-weight:500; color:var(--text-2); line-height:1.4; }
+  .prize .tag{
+    position:absolute; top:13px; right:14px;
+    font-size:9.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:#042b27; background:var(--teal-2); padding:4px 8px; border-radius:999px;
+  }
+  .prize.fam .tag{ background:var(--orange); color:#fff; }
+
+  /* ---------- bottom row: install + join ---------- */
+  .bottom{ display:flex; gap:14px; margin-top:18px; align-items:stretch; }
+  .install{ flex:1.15; }
+  .install .rows{ display:flex; flex-direction:column; gap:9px; }
+  .irow{
+    display:flex; align-items:center; gap:11px;
+    background:var(--ink-2); border:1px solid var(--border);
+    border-radius:13px; padding:11px 13px;
+  }
+  .irow .ic{
+    flex:none; width:34px; height:34px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; background:var(--teal-soft);
+  }
+  .irow .t{ font-size:12px; line-height:1.35; }
+  .irow .t b{ font-size:12.5px; font-weight:800; color:var(--text); }
+  .irow .t span{ color:var(--text-2); font-weight:500; }
+
+  .join{
+    flex:1; background:linear-gradient(165deg,#16233B,#101a30);
+    border:1px solid var(--border); border-radius:18px;
+    padding:15px 16px; display:flex; flex-direction:column;
+  }
+  .join h3{ font-size:13px; font-weight:800; letter-spacing:.04em; }
+  .join .mail{
+    margin-top:9px; font-size:19px; font-weight:900; letter-spacing:-.01em;
+    color:var(--teal-2); word-break:break-all;
+  }
+  .join .note{ font-size:11px; color:var(--text-2); margin-top:4px; font-weight:500; }
+  .qrs{ display:flex; gap:12px; margin-top:auto; padding-top:12px; }
+  .qr{ flex:1; text-align:center; }
+  .qr img{ width:100%; max-width:74px; border-radius:8px; display:block; margin:0 auto; background:#fff; padding:4px; }
+  .qr .lbl{ font-size:9.5px; font-weight:700; color:var(--text-2); margin-top:5px; letter-spacing:.02em; }
+
+  /* ---------- footer ---------- */
+  .foot{
+    margin-top:auto; padding-top:12px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:10px; color:#64748B; font-weight:500;
+    border-top:1px solid var(--border);
+  }
+  .foot a{ color:var(--teal); text-decoration:none; font-weight:700; }
+  .foot .made{ color:#475569; }
+  .foot .made a{ color:#64748B; }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- header -->
+    <div class="topbar">
+      <img class="logo" src="../assets/brand/svg/Rezzies_full_logo_dark.svg" alt="Rezzies" />
+      <span class="pill"><span class="dot"></span>FRIENDS &amp; FAMILY PILOT · 14 DAYS</span>
+    </div>
+
+    <!-- hero -->
+    <div class="hero">
+      <div class="eyebrow">The habit game for your whole crew</div>
+      <h1>YOUR FAMILY<br><span class="vs">vs.</span> <span class="them">THEIRS.</span></h1>
+      <p class="lede"><b>Rezzies turns everyday habits into a team sport.</b> Check in each
+      morning, rack up points, and climb a live leaderboard against the other families.
+      Move more, sleep better, win bragging rights — together.</p>
+    </div>
+
+    <!-- showcase -->
+    <div class="showcase">
+      <div class="phone p1"><img src="assets/screen-checkin.png" alt="Daily check-in" /></div>
+      <div class="phone p2"><img src="assets/screen-leaderboard.png" alt="Leaderboard" /></div>
+      <div class="trophy">
+        <img src="assets/screen-streak.png" alt="Perfect week celebration" />
+        <div class="cap">Hit every habit, every day → <b>perfect-week trophy</b></div>
+      </div>
+    </div>
+
+    <!-- pitch chips -->
+    <div class="pitch">
+      <div class="chip"><div class="k">14 days</div><div class="v">One head-to-head sprint, start to finish</div></div>
+      <div class="chip"><div class="k">Your fam</div><div class="v">vs. every other family in the pilot</div></div>
+      <div class="chip"><div class="k">Real prizes</div><div class="v">Amazon gift cards on the line</div></div>
+    </div>
+
+    <!-- prizes -->
+    <div class="section-h">What you're playing for</div>
+    <div class="prizes">
+      <div class="prize">
+        <span class="tag">Every family</span>
+        <div class="amt"><small>$</small>50</div>
+        <div class="who">Top player in each family</div>
+        <div class="sub">Amazon gift card to the #1 individual on your family's board.</div>
+      </div>
+      <div class="prize fam">
+        <span class="tag">Grand prize</span>
+        <div class="amt"><small>$</small>100</div>
+        <div class="who">Winning family overall</div>
+        <div class="sub">Amazon gift card for the family with the highest total habits logged.</div>
+      </div>
+    </div>
+
+    <!-- install + join -->
+    <div class="bottom">
+      <div class="install">
+        <div class="section-h" style="margin:0 0 11px">Install in ~3 minutes</div>
+        <div class="rows">
+          <div class="irow">
+            <div class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="#2DD4BF"><path d="M16.36 12.78c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.75 2.28-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.29 1.15-.05 1.58-.74 2.97-.74 1.39 0 1.78.74 3 .72 1.24-.02 2.02-1.12 2.78-2.23.88-1.28 1.24-2.52 1.26-2.58-.03-.01-2.41-.93-2.43-3.69zM14.1 6.02c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.68-1.09 1.77-.95 2.81 1.02.08 2.05-.52 2.68-1.28z"/></svg></div>
+            <div class="t"><b>iPhone</b> &nbsp;<span>Get <b style="font-weight:700">TestFlight</b> from the App Store → tap our invite → install Rezzies.</span></div>
+          </div>
+          <div class="irow">
+            <div class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="#2DD4BF"><path d="M6 18c0 .55.45 1 1 1h1v3.5a1.5 1.5 0 0 0 3 0V19h2v3.5a1.5 1.5 0 0 0 3 0V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8A1.5 1.5 0 0 0 2 9.5v6a1.5 1.5 0 0 0 3 0v-6A1.5 1.5 0 0 0 3.5 8zm17 0a1.5 1.5 0 0 0-1.5 1.5v6a1.5 1.5 0 0 0 3 0v-6A1.5 1.5 0 0 0 20.5 8zm-4.97-5.84 1.3-1.3a.4.4 0 0 0-.57-.57l-1.48 1.48A5.46 5.46 0 0 0 12 1.5c-.66 0-1.29.12-1.88.33L8.64.35a.4.4 0 1 0-.57.57l1.3 1.3A5.5 5.5 0 0 0 6.5 7h11a5.5 5.5 0 0 0-2.97-4.84zM10 5.25a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm4 0a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg></div>
+            <div class="t"><b>Android</b> &nbsp;<span>Tap the install link we text you → open the download → install.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="join">
+        <h3>Want in? Grab a spot.</h3>
+        <div class="mail">dan@amaze.net</div>
+        <div class="note">Text or email Dan and we'll send your invite + join code.</div>
+        <div class="qrs">
+          <div class="qr">
+            <img src="assets/qr-install.png" alt="Install guide QR" />
+            <div class="lbl">Install guide</div>
+          </div>
+          <div class="qr">
+            <img src="assets/qr-guide.png" alt="Group leader guide QR" />
+            <div class="lbl">For group leaders</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="foot">
+      <div>Rezzies · private friends-and-family pilot · not yet on the App Store</div>
+      <div class="made">made with <a href="https://tycoon.us">Tycoon.us</a> · <a href="https://tycoon.us">superagent</a></div>
+    </div>
+
+  </div>
+</body>
+</html>
