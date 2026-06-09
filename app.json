@@ -48,7 +48,14 @@
     "extra": {
       "supabaseUrl": "https://umnowggiuiotsgsnvvuj.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtbm93Z2dpdWlvdHNnc252dnVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MDQ5MDEsImV4cCI6MjA5NjI4MDkwMX0.QYSadTNG-KAwJAmyb9h8pMJA9U7yvx8xgMGgkfp7BCo",
-      "sentryDsn": ""
-    }
+      "sentryDsn": "",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "fba2764a-752e-4359-b71d-98d9225ec2e1"
+      }
+    },
+    "owner": "ebaas"
   }
 }
