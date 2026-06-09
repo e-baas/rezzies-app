@@ -31,6 +31,17 @@
         "gradleCommand": ":app:assembleRelease"
       }
     },
+    "testflight": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "internal"
+      },
+      "ios": {
+        "resourceClass": "m-medium",
+        "buildConfiguration": "Release"
+      }
+    },
     "production": {
       "channel": "production",
       "autoIncrement": true,
@@ -48,6 +59,15 @@
   },
   "submit": {
     "internal": {
+      "ios": {
+        "appleId": "dan@amaze.net",
+        "appleTeamId": "F3SY7UT5BV",
+        "ascApiKeyPath": "./secrets/asc-api-key.p8",
+        "ascApiKeyIssuerId": "8107c407-ef5f-4c6a-8270-537a187228fa",
+        "ascApiKeyId": "WZ5NHN6455"
+      }
+    },
+    "testflight": {
       "ios": {
         "appleId": "dan@amaze.net",
         "appleTeamId": "F3SY7UT5BV",

@@ -33,14 +33,14 @@
     },
     "plugins": [
       "expo-router",
-      "sentry-expo",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
           "color": "#14B8A6"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

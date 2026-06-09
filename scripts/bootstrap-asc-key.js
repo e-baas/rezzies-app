@@ -19,11 +19,18 @@ const OUT_FILE = path.join(OUT_DIR, 'asc-api-key.p8');
 
 function readFromVault() {
   try {
-    const raw = execSync('tyctl vault get APP_STORE_CONNECT_PRIVATE_KEY --raw', {
+    const out = execSync('tyctl vault get APP_STORE_CONNECT_PRIVATE_KEY', {
       stdio: ['ignore', 'pipe', 'pipe'],
       encoding: 'utf8',
     });
-    return raw.trim();
+    // tyctl returns JSON: { key, value, description }
+    try {
+      const parsed = JSON.parse(out);
+      if (parsed && typeof parsed.value === 'string') return parsed.value;
+    } catch {
+      return out.trim();
+    }
+    return null;
   } catch {
     return null;
   }
