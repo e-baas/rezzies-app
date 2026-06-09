@@ -16,13 +16,17 @@ This page walks you through it. Takes about 3 minutes.
 3. Open TestFlight once and sign in with the **Apple ID** you want to use for
    testing Rezzies.
 
-### Step 2. Tap your invite
+### Step 2. Open the Rezzies invite link
 
-You'll get an email from Apple titled something like *"You're invited to test
-Rezzies"*, or a text from us with a TestFlight invite link.
+Tap this link **on your iPhone** (not a laptop — TestFlight is iPhone-only):
 
-1. Tap the link on your iPhone (not on a laptop — TestFlight is iPhone-only).
-2. TestFlight opens to a **Rezzies** page. Tap **Accept**.
+> **https://testflight.apple.com/join/D8k1Z1sV**
+
+TestFlight opens to a **Rezzies** page. Tap **Accept**.
+
+(If you were instead sent a personal email invite from Apple titled *"You're
+invited to test Rezzies"*, tapping **View in TestFlight** in that email works the
+same way.)
 
 ### Step 3. Install Rezzies
 
