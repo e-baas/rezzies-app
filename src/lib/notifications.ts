@@ -124,11 +124,19 @@ export function setupNotificationTapHandler(): void {
 function handleNotificationTap(
   response: Notifications.NotificationResponse
 ): void {
-  const data = response.notification.request.content.data;
+  const data = response.notification.request.content.data as
+    | { trigger?: string; target?: string; celebrate?: boolean; milestone?: number }
+    | undefined;
 
   console.log('[notifications] Tapped notification:', data);
 
-  // Navigate to home tab (daily check-in is the primary action)
+  // All notification types deep-link to the home tab (daily check-in is the
+  // primary action). Milestone taps additionally carry a `celebrate` flag in the
+  // payload so the home screen can later replay the ring-pulse / particle burst
+  // (overlay wiring lands with the visual-polish task); routing stays on the
+  // plain home route to keep typed-routes happy.
+  void data;
+
   // Use setTimeout to ensure navigation stack is ready
   setTimeout(() => {
     try {
@@ -147,19 +155,25 @@ function handleNotificationTap(
 // ── Notification Preferences ──────────────────────────────────
 
 export interface NotificationPreferences {
+  notifications_enabled: boolean; // master switch
   reminder_time: string;      // 'HH:MM:SS' in user's local time
   timezone: string;           // IANA timezone, e.g. 'America/New_York'
   notify_morning: boolean;
   notify_midday: boolean;
   notify_evening: boolean;
+  notify_milestone: boolean;  // streak-milestone celebrations
+  notifications_paused_until: string | null; // ISO timestamp; null = not paused
 }
 
 const DEFAULT_PREFS: NotificationPreferences = {
+  notifications_enabled: true,
   reminder_time: '08:00:00',
   timezone: 'America/New_York',
   notify_morning: true,
   notify_midday: true,
   notify_evening: true,
+  notify_milestone: true,
+  notifications_paused_until: null,
 };
 
 /**
@@ -183,18 +197,21 @@ export async function loadNotificationPreferences(): Promise<NotificationPrefere
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('reminder_time, timezone, notify_morning, notify_midday, notify_evening')
+    .select('notifications_enabled, reminder_time, timezone, notify_morning, notify_midday, notify_evening, notify_milestone, notifications_paused_until')
     .eq('id', user.id)
     .single();
 
   if (!profile) return { ...DEFAULT_PREFS };
 
   return {
+    notifications_enabled: profile.notifications_enabled ?? DEFAULT_PREFS.notifications_enabled,
     reminder_time: profile.reminder_time ?? DEFAULT_PREFS.reminder_time,
     timezone: profile.timezone ?? detectTimezone(),
     notify_morning: profile.notify_morning ?? DEFAULT_PREFS.notify_morning,
     notify_midday: profile.notify_midday ?? DEFAULT_PREFS.notify_midday,
     notify_evening: profile.notify_evening ?? DEFAULT_PREFS.notify_evening,
+    notify_milestone: profile.notify_milestone ?? DEFAULT_PREFS.notify_milestone,
+    notifications_paused_until: profile.notifications_paused_until ?? null,
   };
 }
 
