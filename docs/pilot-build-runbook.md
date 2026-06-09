@@ -113,13 +113,31 @@ still needs an APNs key uploaded to Expo (separate from the build).
 
 ### 4. Submit iOS to TestFlight
 
+> **One-time human gate — create the App Store Connect app record first.**
+> Apple does NOT allow creating an app record via the ASC API
+> (`POST /v1/apps` returns `403 — the resource 'apps' does not allow 'CREATE'`).
+> So before the first `eas submit`, a human with access to the e-baas Apple
+> account must create the app shell **once**:
+> App Store Connect → **My Apps → + → New App** →
+> Platform: iOS · Name: `Rezzies` (must be globally unique on the App Store —
+> if taken, use e.g. `Rezzies — Habits`) · Primary language: English (U.S.) ·
+> Bundle ID: `com.ebaas.rezzies` · SKU: `rezzies-001`.
+> Then grab the numeric **Apple ID** shown under App Information and set it as
+> `ascAppId` in the `submit.testflight.ios` profile in `eas.json`.
+>
+> Alternative (no web UI): set `EXPO_APPLE_ID` + an **app-specific password**
+> (`EXPO_APPLE_APP_SPECIFIC_PASSWORD`, generated at appleid.apple.com) and run
+> `eas submit` interactively once — it will create the app record for you.
+> The ASC API key alone CANNOT create the app record.
+
+Once the app record exists and `ascAppId` is set:
+
 ```bash
 npx eas-cli submit --profile testflight --platform ios --latest --non-interactive
 ```
 
 This uses the ASC API key path baked into `eas.json` (`./secrets/asc-api-key.p8`)
-plus the Vault-loaded issuer/key IDs. The first run creates the ASC app
-record for `com.ebaas.rezzies` if it doesn't already exist.
+plus the Vault-loaded issuer/key IDs — fully non-interactive from here on.
 
 In App Store Connect → TestFlight, add internal testers:
 - pilot family contact emails (≤25 internal testers, no Beta App Review needed)
