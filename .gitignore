@@ -11,3 +11,6 @@ web-build/
 .env
 .env.local
 scripts/node_modules/
+
+credentials.json
+secrets/

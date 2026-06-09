@@ -59,31 +59,66 @@ Real brand artwork is committed — no placeholder swap needed:
 Do NOT bump `expo.ios.buildNumber` / `expo.android.versionCode` by hand —
 `appVersionSource: remote` means EAS owns them.
 
-### 2. Login and key bootstrap
+### 2. Login + link the EAS project (one-time)
 
 ```bash
-export EXPO_TOKEN="$(tyctl vault get EXPO_TOKEN --raw)"
-node scripts/bootstrap-asc-key.js     # writes ./secrets/asc-api-key.p8 (0600)
+export EXPO_TOKEN="$(tyctl vault get EXPO_TOKEN | jq -r .value)"
+eas whoami                              # -> ebaas (authenticated using EXPO_TOKEN)
+npm install                             # project deps must be present for config resolution
+eas init --non-interactive              # links @ebaas/rezzies-app (already done; writes extra.eas.projectId + owner)
+node scripts/bootstrap-asc-key.js       # writes ./secrets/asc-api-key.p8 (0600) from Vault
 ```
 
-### 3. Build iOS (TestFlight) + Android (internal APK)
+### 3. Build Android (internal APK)
 
 ```bash
-npx eas-cli build --profile internal --platform ios     --non-interactive
 npx eas-cli build --profile internal --platform android --non-interactive
 ```
 
-`appVersionSource: remote` means EAS owns `buildNumber`/`versionCode`
-auto-increment — no manual bumps required between builds.
+EAS auto-generates a cloud keystore on first run. Output is a hosted
+internal-distribution page with a downloadable APK. `appVersionSource: remote`
+means EAS owns `versionCode` auto-increment — no manual bumps.
+
+### 3b. Provision iOS credentials, then build iOS (TestFlight, store distribution)
+
+EAS cannot generate iOS distribution credentials in `--non-interactive` mode
+(it wants an interactive Apple-ID login + team-type selection). Instead we mint
+them from the ASC API key and feed them as **local** credentials. The
+`testflight` profile uses `distribution: store` + `credentialsSource: local`.
+
+```bash
+# one-time scratch deps for the provisioning script
+mkdir -p /tmp/asc && (cd /tmp/asc && npm i jsonwebtoken node-forge)
+export NODE_PATH=/tmp/asc/node_modules
+export ASC_KEY_ID=$(tyctl vault get APP_STORE_CONNECT_KEY_ID | jq -r .value)
+export ASC_ISSUER_ID=$(tyctl vault get APP_STORE_CONNECT_ISSUER_ID | jq -r .value)
+export ASC_P8_PATH="$(pwd)/secrets/asc-api-key.p8"
+export BUNDLE_ID=com.ebaas.rezzies OUT_DIR=/tmp/ioscreds
+node scripts/provision-ios-credentials.js provision   # creates Apple Distribution cert,
+                                                       # enables Push capability on the App ID,
+                                                       # creates the App Store profile, writes p12
+cp /tmp/ioscreds/dist.p12 secrets/dist.p12
+cp /tmp/ioscreds/rezzies.mobileprovision secrets/rezzies.mobileprovision
+# credentials.json (repo root, gitignored):
+#   {"ios":{"provisioningProfilePath":"secrets/rezzies.mobileprovision",
+#           "distributionCertificate":{"path":"secrets/dist.p12","password":"rezzies"}}}
+
+npx eas-cli build --profile testflight --platform ios --non-interactive
+```
+
+Note: Push Notifications capability MUST be enabled on the App ID or the iOS
+build fails ("provisioning profile doesn't include the aps-environment
+entitlement") — the provisioning script handles this. Runtime push delivery
+still needs an APNs key uploaded to Expo (separate from the build).
 
 ### 4. Submit iOS to TestFlight
 
 ```bash
-npx eas-cli submit --profile internal --platform ios --latest --non-interactive
+npx eas-cli submit --profile testflight --platform ios --latest --non-interactive
 ```
 
 This uses the ASC API key path baked into `eas.json` (`./secrets/asc-api-key.p8`)
-plus the Vault-loaded issuer/key IDs. The first run will create the ASC app
+plus the Vault-loaded issuer/key IDs. The first run creates the ASC app
 record for `com.ebaas.rezzies` if it doesn't already exist.
 
 In App Store Connect → TestFlight, add internal testers:
