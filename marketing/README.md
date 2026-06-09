@@ -46,6 +46,17 @@ App screenshots (`screen-checkin.png`, `screen-leaderboard.png`,
 `screen-streak.png`) are pulled from the v2 visual mockup (Direction A,
 teal). The logo is referenced live from `../assets/brand/svg/`.
 
+**Blended screenshots** (`screen-checkin-blend.png`,
+`screen-leaderboard-blend.png`) are the flyer-ready versions: the app's
+near-black page background (`#0A0A0A`) is recolored to the flyer's navy
+(`#0C1322`) so the screens blend into the flyer background instead of
+reading as hard dark rectangles. Only the flat page background is recolored
+— the elevated cards, rings, habit pills, and leaderboard content are left
+untouched. The flyer references the `-blend` files; the originals are kept
+as the raw source screenshots. If the screens are re-exported, regenerate
+the blended versions (recolor near-neutral pixels with
+`max(r,g,b) <= 16` → `#0C1322`).
+
 ---
 
 made with [Tycoon.us](https://tycoon.us) · [superagent](https://tycoon.us)
