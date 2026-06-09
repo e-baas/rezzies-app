@@ -41,14 +41,23 @@ Confirm both of these commits are present on `origin/main`:
 
 If not present, stop. The pilot build must include both.
 
-### 1. Replace placeholder assets (one-time)
+### 1. Brand assets (already in place)
 
-The current `assets/icon.png`, `adaptive-icon.png`, `splash.png`, `favicon.png`
-are **solid #0F172A placeholders**. They must be replaced with the approved
-artwork before the first TestFlight submission. The EARLY-CHECKPOINT on TYC-139
-captures the chairman's approval for the final artwork; commit the approved
-files into `assets/` and bump `expo.ios.buildNumber` + `expo.android.versionCode`
-in `app.json`.
+Real brand artwork is committed — no placeholder swap needed:
+
+- `expo.icon` → `./assets/brand/Rezzies_AppIcon_dark.png` (teal app icon, TYC-151).
+- `assets/splash.png` → navy `#0F172A` splash with the teal rings mark +
+  "Rezzies™" wordmark lockup, centered (TYC-139, Dev-chosen treatment per
+  chairman's defer).
+- `assets/adaptive-icon.png` → Android adaptive foreground: white rings + orange
+  dot on transparent, within the launcher safe zone; `adaptiveIcon.backgroundColor`
+  is teal `#14B8A6` so the masked icon matches iOS exactly.
+- `assets/notification-icon.png` → monochrome white rings glyph for Android
+  status-bar notifications; `expo-notifications.color` is teal `#14B8A6`.
+- `assets/favicon.png` → teal app icon at 48px (web).
+
+Do NOT bump `expo.ios.buildNumber` / `expo.android.versionCode` by hand —
+`appVersionSource: remote` means EAS owns them.
 
 ### 2. Login and key bootstrap
 
