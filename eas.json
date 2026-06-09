@@ -40,7 +40,8 @@
       },
       "ios": {
         "resourceClass": "m-medium",
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "image": "macos-sequoia-15.6-xcode-26.0"
       }
     },
     "production": {
@@ -71,6 +72,7 @@
     "testflight": {
       "ios": {
         "appleId": "dan@amaze.net",
+        "ascAppId": "6778567337",
         "appleTeamId": "F3SY7UT5BV",
         "ascApiKeyPath": "./secrets/asc-api-key.p8",
         "ascApiKeyIssuerId": "8107c407-ef5f-4c6a-8270-537a187228fa",

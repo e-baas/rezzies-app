@@ -79,6 +79,19 @@ async function api(method, path, body) {
   }
 
   if (action === 'provision') {
+    // 0) Revoke existing DISTRIBUTION certs we no longer hold the private key for.
+    //    Apple caps Apple Distribution certs at 2; we consolidate to one fresh
+    //    cert+key we control. Set KEEP_CERTS=1 to skip.
+    if (!process.env.KEEP_CERTS) {
+      const existing = await api('GET', '/v1/certificates?limit=200');
+      for (const c of (existing.data || [])) {
+        if (c.attributes.certificateType === 'DISTRIBUTION') {
+          try { await api('DELETE', `/v1/certificates/${c.id}`); console.log('[asc] revoked stale DISTRIBUTION cert', c.id); }
+          catch (e) { console.log('[asc] could not revoke', c.id, '-', e.message.split('\n')[0]); }
+        }
+      }
+    }
+
     // 1) Private key + CSR
     const keyPem = `${OUT}/dist.key.pem`;
     const csrPem = `${OUT}/dist.csr.pem`;
