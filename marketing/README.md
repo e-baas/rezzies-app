@@ -6,10 +6,17 @@ Bold one-page recruitment flyer for the friends-and-family pilot — the
 exciting, visual counterpart to the leader guide. US-Letter portrait,
 renders to a single-page PDF for print or digital share.
 
-**Contents:** what Rezzies is, the 14-day "your family vs. theirs" pitch,
-prize structure ($50 Amazon card per family winner · $100 for the top
-family overall), at-a-glance install steps (iPhone TestFlight / Android
-link), and how to join (`dan@amaze.net`). Two QR codes currently point to
+**Narrative flow (chairman revision, TYC-157):** big Rezzies name reveal →
+clear warm intro (healthy habits as a family game; "compete together ·
+complete together") → a "you're invited to help us test it" invitation →
+the in-family contest with **$50** to each family's most consistent player
+→ *then* the **$100** grand prize for the family with the best total
+overall → app screenshots → at-a-glance install (iPhone TestFlight /
+Android link) → how to join.
+
+**Pilot contact:** **Tiffany** runs the pilot — `tiffany@rezzies.co`.
+(That inbox on the `rezzies.co` domain is being stood up; confirm it's
+live before wide distribution.) Two QR codes currently point to
 **placeholder URLs** — swap them once the real install-flow doc and leader
 guide are live (see below).
 
