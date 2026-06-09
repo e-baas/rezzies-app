@@ -90,7 +90,15 @@ END$$;
 -- Re-created to expose profile.created_at (48h honeymoon gate) and the new
 -- preference columns. One row per participant; the scheduler aggregates to one
 -- push per user.
-CREATE OR REPLACE VIEW notification_eligible_users AS
+--
+-- NOTE: we DROP then CREATE rather than CREATE OR REPLACE. Migration 004 already
+-- shipped this view with a different column set/order (it had `profile_id` and
+-- lacked `profile_created_at` + the v2 preference columns). Postgres
+-- `CREATE OR REPLACE VIEW` cannot drop or reorder existing columns, so replacing
+-- the 004 view in place errors out. DROP VIEW IF EXISTS makes this safe whether
+-- the project is on 004's view, 005's view, or has no view at all.
+DROP VIEW IF EXISTS notification_eligible_users;
+CREATE VIEW notification_eligible_users AS
 SELECT
   p.id                         AS user_id,
   p.display_name,
