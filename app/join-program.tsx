@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router';
 import { useProgramStore } from '../src/stores/programStore';
 import { c, radii, space } from '../src/theme/tokens';
+import Logo from '../src/components/brand/Logo';
 
 // Visual polish v2 (TYC-137): dark canvas, orange primary CTA, teal
 // accent for cancel-text hover affinity; invite code is the only
@@ -39,7 +40,7 @@ export default function JoinProgram() {
       style={styles.container}
     >
       <View style={styles.inner}>
-        <Text style={styles.emoji}>🔗</Text>
+        <Logo variant="wordmark" theme="dark" width={172} style={styles.brand} />
         <Text style={styles.title}>Join a Program</Text>
         <Text style={styles.subtitle}>
           Enter the invite code shared by your program sponsor to join their group.
@@ -77,7 +78,7 @@ export default function JoinProgram() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: space.xxxl },
-  emoji: { fontSize: 56, textAlign: 'center', marginBottom: space.lg },
+  brand: { alignSelf: 'center', marginBottom: space.xl },
   title: {
     fontSize: 26,
     fontWeight: '800',

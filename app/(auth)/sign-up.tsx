@@ -6,6 +6,7 @@ import {
 import { Link, router } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { c, radii, space } from '../../src/theme/tokens';
+import Logo from '../../src/components/brand/Logo';
 
 // Visual polish v2 (TYC-137): dark + token-driven, mirrors sign-in.tsx.
 
@@ -43,8 +44,7 @@ export default function SignUp() {
       style={styles.container}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>🏆</Text>
-        <Text style={styles.title}>Join The Rezzies</Text>
+        <Logo variant="full" theme="dark" width={232} style={styles.logo} />
         <Text style={styles.subtitle}>
           Create your account to get started
         </Text>
@@ -100,14 +100,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: space.xxxl },
-  logo: { fontSize: 48, textAlign: 'center', marginBottom: space.sm },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: c.text,
-    textAlign: 'center',
-    letterSpacing: -0.6,
-  },
+  logo: { alignSelf: 'center', marginBottom: space.lg },
   subtitle: {
     fontSize: 14,
     color: c.text2,

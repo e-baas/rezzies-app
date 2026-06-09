@@ -6,6 +6,7 @@ import {
 import { Link, router } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { c, radii, space } from '../../src/theme/tokens';
+import Logo from '../../src/components/brand/Logo';
 
 // Visual polish v2 (TYC-137):
 // - Dark canvas (c.bg) — matches the rest of the first-7-day surfaces
@@ -42,8 +43,7 @@ export default function SignIn() {
       style={styles.container}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>🏆</Text>
-        <Text style={styles.title}>The Rezzies</Text>
+        <Logo variant="full" theme="dark" width={232} style={styles.logo} />
         <Text style={styles.subtitle}>Sign in to your account</Text>
 
         <TextInput
@@ -90,16 +90,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: space.xxxl },
   logo: {
-    fontSize: 48,
-    textAlign: 'center',
-    marginBottom: space.sm,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: c.text,
-    textAlign: 'center',
-    letterSpacing: -0.6,
+    alignSelf: 'center',
+    marginBottom: space.lg,
   },
   subtitle: {
     fontSize: 14,

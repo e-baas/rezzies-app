@@ -2,6 +2,10 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import { c } from '../../src/theme/tokens';
+import Logo from '../../src/components/brand/Logo';
+
+// Tab-bar header brand: small "rings + Rezzies" mark (no tagline) per TYC-151.
+const HeaderLogo = () => <Logo variant="mark" theme="dark" width={104} />;
 
 export default function TabLayout() {
   return (
@@ -25,7 +29,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Today',
-          headerTitle: 'Rezzies',
+          headerTitle: HeaderLogo,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>●</Text>,
         }}
       />
@@ -33,7 +37,7 @@ export default function TabLayout() {
         name="leaderboard"
         options={{
           title: 'Leaders',
-          headerTitle: 'Rezzies',
+          headerTitle: HeaderLogo,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>▲</Text>,
         }}
       />
@@ -41,7 +45,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'You',
-          headerTitle: 'Rezzies',
+          headerTitle: HeaderLogo,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◆</Text>,
         }}
       />

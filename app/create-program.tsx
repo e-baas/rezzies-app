@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router';
 import { useProgramStore } from '../src/stores/programStore';
 import { c, radii, space } from '../src/theme/tokens';
+import Logo from '../src/components/brand/Logo';
 
 // Visual polish v2 (TYC-137):
 // - Dark canvas (c.bg), surface tiles (c.surface), 14pt radius (radii.md)
@@ -213,6 +214,7 @@ export default function CreateProgram() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Logo variant="wordmark" theme="dark" width={132} style={styles.brand} />
         <Text style={styles.title}>Create Program</Text>
         <View style={styles.stepIndicator}>
           {[1, 2, 3, 4].map((s) => (
@@ -502,6 +504,7 @@ export default function CreateProgram() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   content: { padding: space.lg, paddingBottom: 40 },
+  brand: { marginBottom: space.md },
   title: {
     fontSize: 24,
     fontWeight: '800',
