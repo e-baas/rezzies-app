@@ -394,15 +394,32 @@ export default function CreateProgram() {
               ))}
             </ScrollView>
 
-            {/* Existing bonuses */}
-            {activeBonuses.map((b, i) => (
+            {/* Existing bonuses — render ALL bonuses (incl. freshly-added blank
+                ones) so the inputs are visible and editable. Index `i` is the real
+                index into `bonuses`, so updateBonus/removeBonus hit the right row. */}
+            {bonuses.map((b, i) => (
               <View key={i} style={styles.bonusCard}>
                 <View style={styles.bonusCardHeader}>
-                  <Text style={styles.bonusMonth}>{MONTHS[b.monthIndex]}</Text>
+                  <Text style={styles.bonusCardLabel}>Challenge {i + 1}</Text>
                   <TouchableOpacity onPress={() => removeBonus(i)}>
                     <Text style={styles.removeBtnText}>✕</Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* Month picker — tap to assign which month this challenge runs in */}
+                <Text style={styles.label}>Month</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.monthScroll}>
+                  {MONTHS.map((m, mi) => (
+                    <TouchableOpacity
+                      key={mi}
+                      style={[styles.monthPill, b.monthIndex === mi && styles.monthPillActive]}
+                      onPress={() => updateBonus(i, 'monthIndex', mi)}
+                    >
+                      <Text style={[styles.monthPillText, b.monthIndex === mi && styles.monthPillTextActive]}>{m}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
                 <TextInput style={styles.input} value={b.name} onChangeText={(v) => updateBonus(i, 'name', v)} placeholder="Challenge name" placeholderTextColor="#9CA3AF" />
                 <TextInput style={styles.input} value={b.description} onChangeText={(v) => updateBonus(i, 'description', v)} placeholder="Description" placeholderTextColor="#9CA3AF" />
                 <View style={styles.bonusRow}>
@@ -743,6 +760,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
+  bonusCardLabel: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: c.text,
+    letterSpacing: 0.2,
+  },
+  monthScroll: { marginBottom: space.sm },
+  monthPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radii.pill,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+  },
+  monthPillActive: {
+    borderColor: c.primary,
+    backgroundColor: c.primarySoft,
+  },
+  monthPillText: { fontSize: 13, fontWeight: '700', color: c.text2 },
+  monthPillTextActive: { color: c.primary },
   bonusRow: { flexDirection: 'row' },
   addBonusBtn: {
     borderWidth: 2,

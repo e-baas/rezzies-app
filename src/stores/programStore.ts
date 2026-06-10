@@ -74,11 +74,21 @@ export const useProgramStore = create<ProgramState>((set) => ({
       if (periods && data.monthlyBonuses.length > 0) {
         const bonusInserts = data.monthlyBonuses
           .filter((b) => b.name.trim())
-          .map((b, i) => ({
-            program_id: program.id,
-            period_id: periods[Math.min(i, periods.length - 1)].id,
-            name: b.name, description: b.description, target: b.target, award: b.award, unit: b.unit,
-          }));
+          .map((b, i) => {
+            // periodId carries the chosen calendar month index (0-11). Match it to
+            // the period for that month so the bonus lands on the month the sponsor
+            // actually picked — not just the i-th period.
+            const monthIndex = parseInt(b.periodId, 10);
+            const matched = Number.isFinite(monthIndex)
+              ? periods.find((p) => new Date(p.start_date + 'T00:00:00').getMonth() === monthIndex)
+              : undefined;
+            const period = matched || periods[Math.min(i, periods.length - 1)];
+            return {
+              program_id: program.id,
+              period_id: period.id,
+              name: b.name, description: b.description, target: b.target, award: b.award, unit: b.unit,
+            };
+          });
         if (bonusInserts.length > 0) {
           await supabase.from('monthly_bonuses').insert(bonusInserts);
         }
