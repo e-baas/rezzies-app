@@ -22,15 +22,26 @@
  * Deploy: supabase functions deploy notification-scheduler --project-ref umnowggiuiotsgsnvvuj
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ── Env ───────────────────────────────────────────────────────
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Supabase injects SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY into the edge
+// runtime automatically. We read them lazily so a momentarily-missing env
+// surfaces as a clean JSON error at request time instead of a boot-time
+// crash (which the hosted runtime returns to callers as an opaque 503).
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+let _supabase: SupabaseClient | null = null;
+function db(): SupabaseClient {
+  if (_supabase) return _supabase;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) {
+    throw new Error("missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in edge env");
+  }
+  _supabase = createClient(url, key);
+  return _supabase;
+}
 
 // ── Tunables (chairman-approved windows) ──────────────────────
 const QUIET_START_HOUR = 21;   // 9pm — no sends at/after this hour
@@ -131,7 +142,7 @@ interface UserState {
 }
 
 async function loadUserStates(): Promise<UserState[]> {
-  const { data, error } = await supabase.from("notification_eligible_users").select("*");
+  const { data, error } = await db().from("notification_eligible_users").select("*");
   if (error || !data) {
     console.error("[scheduler] view query failed:", error);
     return [];
@@ -169,7 +180,7 @@ async function loadUserStates(): Promise<UserState[]> {
 /** Count checked habits today across all the user's participant rows. */
 async function checkedToday(participantIds: string[], localDate: string): Promise<number> {
   if (participantIds.length === 0) return 0;
-  const { data } = await supabase
+  const { data } = await db()
     .from("daily_checks")
     .select("id")
     .in("participant_id", participantIds)
@@ -180,7 +191,7 @@ async function checkedToday(participantIds: string[], localDate: string): Promis
 
 /** Rows logged for this user on this local date (for the 2/day cap). */
 async function dailySendCount(userId: string, localDate: string): Promise<number> {
-  const { data } = await supabase
+  const { data } = await db()
     .from("notification_log")
     .select("category")
     .eq("user_id", userId)
@@ -190,7 +201,7 @@ async function dailySendCount(userId: string, localDate: string): Promise<number
 }
 
 async function alreadyLogged(userId: string, localDate: string, category: string): Promise<boolean> {
-  const { data } = await supabase
+  const { data } = await db()
     .from("notification_log")
     .select("id")
     .eq("user_id", userId)
@@ -202,7 +213,7 @@ async function alreadyLogged(userId: string, localDate: string, category: string
 
 async function milestoneAlreadySent(userId: string, milestone: number): Promise<boolean> {
   // Milestone is once-ever, so match on category regardless of date.
-  const { data } = await supabase
+  const { data } = await db()
     .from("notification_log")
     .select("id")
     .eq("user_id", userId)
@@ -213,7 +224,7 @@ async function milestoneAlreadySent(userId: string, milestone: number): Promise<
 
 /** Pick a copy variant index different from the one used last time for this category. */
 async function pickVariant(userId: string, category: string, count: number): Promise<number> {
-  const { data } = await supabase
+  const { data } = await db()
     .from("notification_log")
     .select("variant_index")
     .eq("user_id", userId)
@@ -228,7 +239,7 @@ async function pickVariant(userId: string, category: string, count: number): Pro
 }
 
 async function logSend(userId: string, localDate: string, category: string, variantIndex: number): Promise<boolean> {
-  const { error } = await supabase
+  const { error } = await db()
     .from("notification_log")
     .insert({ user_id: userId, sent_date: localDate, category, variant_index: variantIndex });
   // Unique-violation = a concurrent tick already claimed it; treat as "do not send".
@@ -241,7 +252,7 @@ async function logSend(userId: string, localDate: string, category: string, vari
 }
 
 async function tokensFor(userId: string): Promise<string[]> {
-  const { data } = await supabase.from("push_tokens").select("token").eq("user_id", userId);
+  const { data } = await db().from("push_tokens").select("token").eq("user_id", userId);
   return (data ?? []).map((t) => t.token).filter(Boolean);
 }
 
@@ -390,20 +401,42 @@ async function runScheduler(opts: { force?: string } = {}): Promise<{ sent: numb
 //                        chairman can verify a trigger immediately on-device
 //                        (all OTHER gates — cap, opt-out, honeymoon, ring,
 //                        streak>=3, idempotency — still apply).
-serve(async (req: Request) => {
+// Native Deno.serve (no remote std import → no boot-time fetch dependency).
+Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
   if (url.pathname.endsWith("/run") && req.method === "POST") {
     const force = url.searchParams.get("force") ?? undefined;
-    const result = await runScheduler({ force: force ?? undefined });
-    return new Response(JSON.stringify({ ok: true, ...result }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      const result = await runScheduler({ force: force ?? undefined });
+      return new Response(JSON.stringify({ ok: true, ...result }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (err) {
+      console.error("[scheduler] run failed:", err);
+      return new Response(JSON.stringify({ ok: false, error: String(err) }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
   return new Response("Rezzies Notification Scheduler", { status: 200 });
 });
 
 // ── Cron: every 15 minutes ────────────────────────────────────
-Deno.cron("notification-scheduler", "*/15 * * * *", async () => {
-  await runScheduler();
-});
+// Deno.cron is only available on some Supabase edge runtime versions; calling
+// it where unsupported throws at module load and the whole function fails to
+// boot (opaque 503). Feature-detect and register it only when present. The
+// authoritative 15-minute schedule is pg_cron + pg_net POSTing to /run, set up
+// in migration 006 — so the system is fully scheduled even when Deno.cron is
+// absent. Where Deno.cron IS supported this acts as a harmless backup.
+try {
+  const denoCron = (Deno as unknown as { cron?: (...a: unknown[]) => void }).cron;
+  if (typeof denoCron === "function") {
+    denoCron("notification-scheduler", "*/15 * * * *", async () => {
+      try { await runScheduler(); } catch (e) { console.error("[scheduler] cron run failed:", e); }
+    });
+  }
+} catch (e) {
+  console.error("[scheduler] Deno.cron registration skipped:", e);
+}

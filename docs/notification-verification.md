@@ -16,39 +16,63 @@ plus per-category opt-out.
 
 ## Part 1 — Deploy (one-time)
 
-> Depends on the TYC-136 Supabase project being live. All steps are additive and
-> idempotent — safe to run against the existing project.
+> **STATUS: Part 1 is DONE.** The full server-side system was deployed and
+> verified against the live project `umnowggiuiotsgsnvvuj` on 2026-06-10
+> (migrations 005 + 006, edge function, pg_cron job — all confirmed working).
+> The steps below are kept as the reproducible record / fresh-environment guide.
+> The only remaining work is Part 2 (on-device verification on the chairman's iPhone).
 
-### 1.1 Apply the migration
+### 1.1 Apply the migrations  ✅ applied to live project
 
-`supabase/migrations/005_notifications_v2.sql` adds: master switch, milestone toggle,
-vacation-pause column, the `notification_log` table (idempotency + 2/day cap + copy
-rotation), and re-creates the `notification_eligible_users` view to expose
-`profile_created_at` (honeymoon gate).
+- `005_notifications_v2.sql` — master switch, milestone toggle, vacation-pause
+  column, the `notification_log` table (idempotency + 2/day cap + copy rotation),
+  and rebuilds the `notification_eligible_users` view to expose
+  `profile_created_at` (honeymoon gate). (It DROPs then CREATEs the view: migration
+  004 shipped that view with a different column shape, so `CREATE OR REPLACE` alone
+  errors — see the migration's header note.)
+- `006_notification_cron.sql` — enables `pg_cron` + `pg_net` and schedules the
+  function every 15 minutes (see 1.2).
 
 ```bash
-# via Supabase CLI (preferred — runs every pending migration)
+# via Supabase CLI (runs every pending migration)
 supabase db push --project-ref umnowggiuiotsgsnvvuj
 
-# or apply just this file with psql / the SQL editor
+# or apply each file directly with psql / the SQL editor
 psql "$SUPABASE_DB_URL" -f supabase/migrations/005_notifications_v2.sql
+psql "$SUPABASE_DB_URL" -f supabase/migrations/006_notification_cron.sql
 ```
 
-### 1.2 Deploy the scheduler edge function
+### 1.2 Deploy the scheduler edge function  ✅ deployed + live
 
 ```bash
-supabase functions deploy notification-scheduler --project-ref umnowggiuiotsgsnvvuj
-# set the secrets the function reads at runtime:
-supabase secrets set \
-  SUPABASE_URL=https://umnowggiuiotsgsnvvuj.supabase.co \
-  SUPABASE_SERVICE_ROLE_KEY=<service_role_key_from_vault> \
-  --project-ref umnowggiuiotsgsnvvuj
+# --use-api deploys without Docker
+supabase functions deploy notification-scheduler --project-ref umnowggiuiotsgsnvvuj --use-api
 ```
 
-The function self-schedules via `Deno.cron("notification-scheduler", "*/15 * * * *")`,
-so it runs every 15 minutes once deployed — no extra pg_cron wiring needed. (If you
-prefer pg_cron + pg_net instead, schedule a POST to the function's `/run` endpoint
-every 15 min; the Deno.cron block is harmless if left in place.)
+> **Do NOT run `supabase secrets set SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=…`.**
+> Supabase reserves the `SUPABASE_` prefix and rejects it as a custom secret —
+> and it's unnecessary, because the edge runtime injects `SUPABASE_URL`,
+> `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` automatically. The function
+> reads them straight from `Deno.env` (lazily, so a missing var returns a clean
+> JSON error instead of an opaque 503 boot crash).
+
+**Scheduling is via pg_cron + pg_net, not Deno.cron.** `Deno.cron` is unreliable
+on the hosted edge runtime (it can throw at module load and 503 the whole
+function), so the function registers it only when the runtime supports it and
+otherwise relies on the pg_cron job from migration 006. That job authenticates to
+the function with the service_role key stored in Supabase Vault under the name
+`service_role_key`:
+
+```sql
+-- one-time per project (holds a secret, so not in the committed migration):
+select vault.create_secret('<service_role_key>', 'service_role_key',
+  'service role JWT used by the notification cron to call the edge function');
+```
+
+Verified end-to-end on 2026-06-10: `cron.job` row `notification-scheduler-15min`
+active at `*/15 * * * *`; a manual `net.http_post` to `/run` returned
+`200 {"ok":true,"sent":0,"evaluated":0}` (0 users until pilot installs land —
+expected).
 
 ### 1.3 Client build
 
