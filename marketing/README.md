@@ -8,11 +8,12 @@ renders to a single-page PDF for print or digital share.
 
 **Narrative flow (chairman revision, TYC-157):** big Rezzies name reveal →
 clear warm intro (healthy habits as a family game; "compete together ·
-complete together") → a "you're invited to help us test it" invitation →
-the in-family contest with **$50** to each family's most consistent player
-→ *then* the **$100** grand prize for the family with the best total
-overall → app screenshots → at-a-glance install (iPhone TestFlight /
-Android link) → how to join.
+complete together") → a "you're invited to help us test it" invitation
+(noting the pilot prize money is a thank-you, not part of the regular
+program) → the in-family contest with **$50** to each family's
+**top points-scorer** → *then* the **$100** grand prize for the pilot
+family with the **highest combined points** → app screenshots →
+at-a-glance install (iPhone TestFlight / Android link) → how to join.
 
 **Pilot contact:** **Tiffany** runs the pilot — `tiffany@rezzies.co`.
 (That inbox on the `rezzies.co` domain is being stood up; confirm it's
@@ -47,15 +48,25 @@ App screenshots (`screen-checkin.png`, `screen-leaderboard.png`,
 teal). The logo is referenced live from `../assets/brand/svg/`.
 
 **Blended screenshots** (`screen-checkin-blend.png`,
-`screen-leaderboard-blend.png`) are the flyer-ready versions: the app's
-near-black page background (`#0A0A0A`) is recolored to the flyer's navy
-(`#0C1322`) so the screens blend into the flyer background instead of
-reading as hard dark rectangles. Only the flat page background is recolored
-— the elevated cards, rings, habit pills, and leaderboard content are left
-untouched. The flyer references the `-blend` files; the originals are kept
-as the raw source screenshots. If the screens are re-exported, regenerate
-the blended versions (recolor near-neutral pixels with
-`max(r,g,b) <= 16` → `#0C1322`).
+`screen-leaderboard-blend.png`, `screen-streak-blend.png`) are the
+flyer-ready versions: the app's flat dark page background is recolored to
+the flyer's navy (`#0C1322`) so the screens blend into the flyer background
+instead of reading as hard dark rectangles. Only the flat page background
+is recolored — the elevated cards, rings, habit pills, leaderboard content,
+trophy, gold text, and teal day pills are left untouched. The flyer
+references the `-blend` files (all three now sit bare on a soft shadow +
+faint teal glow, no card frame or border); the originals are kept as the
+raw source screenshots.
+
+Regenerate the check-in / leaderboard blends by recoloring near-neutral
+pixels with `max(r,g,b) <= 16` → `#0C1322`. The Perfect Week (`streak`)
+blend has a lighter `#161616` page background, so use `blend-streak.js`
+(near-neutral pixels with `max(r,g,b) <= 40` and low saturation →
+`#0C1322`):
+
+```bash
+npm install sharp --no-save && node blend-streak.js
+```
 
 ---
 

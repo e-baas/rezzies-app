@@ -120,12 +120,11 @@
   .pcap{ position:absolute; left:0; top:1.40in; width:1.9in; text-align:center;
     font-size:9.5px; font-weight:700; color:var(--text-2); }
   .trophy{
-    position:absolute; right:0; top:0; width:1.6in; border-radius:13px; overflow:hidden;
-    background:linear-gradient(180deg,#16233B,#0e1830); border:1px solid var(--border);
-    box-shadow:0 14px 28px rgba(0,0,0,.45); padding:8px 8px 6px;
+    position:absolute; right:0; top:0; width:1.6in;
   }
-  .trophy img{ display:block; width:100%; border-radius:9px; }
-  .trophy .cap{ margin-top:6px; font-size:9px; font-weight:700; color:var(--text-2); text-align:center; }
+  .trophy img{ display:block; width:100%; border-radius:15px;
+    box-shadow:0 12px 26px rgba(0,0,0,.38), 0 0 22px rgba(20,184,166,.10); }
+  .trophy .cap{ margin-top:7px; font-size:9px; font-weight:700; color:var(--text-2); text-align:center; }
   .trophy .cap b{ color:var(--gold); }
   .proof .mid{
     position:absolute; left:2.0in; right:1.74in; top:48%; transform:translateY(-50%);
@@ -135,7 +134,7 @@
   .proof .mid .small{ font-size:11px; font-weight:600; color:var(--text-2); margin-top:5px; line-height:1.4; }
 
   /* ---------- 7 · install + join ---------- */
-  .bottom{ display:flex; gap:14px; margin-top:11px; align-items:stretch; }
+  .bottom{ display:flex; gap:14px; margin-top:calc(11px + 0.33in); align-items:stretch; }
   .install{ flex:1.05; }
   .section-h{
     display:flex; align-items:center; gap:9px; margin-bottom:10px;
@@ -198,21 +197,23 @@
       <div class="txt">
         <b>You're invited to help us test it.</b>
         <span>&nbsp; Be one of the first families in our <b style="font-weight:700">14-day private pilot</b>.
-        Play along, have fun, and your feedback helps us get Rezzies ready for everyone.</span>
+        Play along, have fun, and your feedback helps us get Rezzies ready for everyone.
+        As a thank-you for piloting, <b style="font-weight:700;color:#2DD4BF">we're putting up the prize money this time</b> —
+        cash prizes aren't part of the regular Rezzies program.</span>
       </div>
     </div>
 
     <!-- 4 + 5 · the game -->
     <div class="game">
       <div class="h">First, it's a contest <span class="o">inside your own family.</span></div>
-      <div class="sub">Who stays the most consistent over 14 days?</div>
+      <div class="sub">Who racks up the most points over 14 days?</div>
 
       <div class="step one">
         <div class="num">1</div>
         <div class="amt"><small>$</small>50</div>
         <div class="body">
-          <div class="lead">Win your family</div>
-          <div class="desc">A <b style="color:#CBD5E1;font-weight:700">$50 Amazon gift card</b> goes to the most consistent person in <i>each</i> family. Your own prize, your own bragging rights.</div>
+          <div class="lead">Beat your family</div>
+          <div class="desc">A <b style="color:#CBD5E1;font-weight:700">$50 Amazon gift card</b> goes to the person with the <b style="color:#CBD5E1;font-weight:700">most points</b> in <i>each</i> family. Your own prize, your own bragging rights.</div>
         </div>
         <div class="tag">Every family</div>
       </div>
@@ -222,7 +223,7 @@
         <div class="amt"><small>$</small>100</div>
         <div class="body">
           <div class="lead">Then go for the big one — win it all</div>
-          <div class="desc">The family with the best <b style="color:#CBD5E1;font-weight:700">total</b> across everyone takes home a <b style="color:#CBD5E1;font-weight:700">$100 Amazon gift card</b>. Pull together and take the whole thing.</div>
+          <div class="desc">The pilot family with the <b style="color:#CBD5E1;font-weight:700">highest combined points</b> will take home a <b style="color:#CBD5E1;font-weight:700">$100 Amazon gift card</b>.</div>
         </div>
         <div class="tag">Grand prize</div>
       </div>
@@ -238,7 +239,7 @@
         <div class="small">Simple, fast, and a little bit addictive — in the best way.</div>
       </div>
       <div class="trophy">
-        <img src="assets/screen-streak.png" alt="Perfect week celebration" />
+        <img src="assets/screen-streak-blend.png" alt="Perfect week celebration" />
         <div class="cap">Every habit, every day → <b>perfect-week trophy</b></div>
       </div>
     </div>
