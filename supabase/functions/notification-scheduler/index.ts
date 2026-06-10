@@ -311,82 +311,70 @@ async function runScheduler(opts: { force?: string } = {}): Promise<{ sent: numb
     const open = Math.max(0, u.totalHabits - checked);
     const ringClosed = u.totalHabits > 0 && checked >= u.totalHabits;
 
+    // `forced` = an on-demand verification call (?force=<category>). A forced
+    // call fires exactly that one category regardless of time window, check-in
+    // state, ring-closed, or the 2/day cap, and does NOT write notification_log
+    // (so it can be repeated and never pollutes real cadence/idempotency). Real
+    // cron ticks pass no force, so their behaviour is unchanged.
+    const forced = opts.force;
+
+    // Shared sender. For forced calls we skip logSend entirely; for real ticks
+    // logSend both records the send and enforces idempotency (unique row).
+    const deliver = async (
+      category: string, variant: number, body: string, data: Record<string, unknown>, priority?: string,
+    ): Promise<boolean> => {
+      if (!forced) {
+        if (await alreadyLogged(u.userId, date, category)) return false;
+        if (!(await logSend(u.userId, date, category, variant))) return false;
+      }
+      const tokens = await tokensFor(u.userId);
+      await sendExpo(tokens.map((to) => ({
+        to, title: "The Rezzies", sound: "default", ...(priority ? { priority } : {}),
+        body, data,
+      })));
+      sent += tokens.length > 0 ? 1 : 0;
+      return true;
+    };
+
     // ── Choose the single category to fire this tick (priority order) ──
     // 1) Milestone celebration (does not count toward the daily cap).
-    if (u.notifyMilestone && hour >= MILESTONE_OPEN_HOUR && hour < MILESTONE_CLOSE_HOUR) {
+    if ((forced === "milestone" || (!forced && u.notifyMilestone)) && hour >= MILESTONE_OPEN_HOUR && hour < MILESTONE_CLOSE_HOUR) {
       const m = MILESTONES.find((x) => x === u.maxStreak);
-      if (m && !(await milestoneAlreadySent(u.userId, m))) {
-        const category = `milestone:${m}`;
-        if (await logSend(u.userId, date, category, m)) {
-          const tokens = await tokensFor(u.userId);
-          const body = fillTemplate(MILESTONE_COPY[m], { name: u.displayName, N: m });
-          await sendExpo(tokens.map((to) => ({
-            to, title: "The Rezzies", sound: "default", priority: "high",
-            body, data: { trigger: "milestone", milestone: m, target: "/(tabs)/home", celebrate: true },
-          })));
-          sent += tokens.length > 0 ? 1 : 0;
+      if (m && (forced || !(await milestoneAlreadySent(u.userId, m)))) {
+        const body = fillTemplate(MILESTONE_COPY[m], { name: u.displayName, N: m });
+        if (await deliver(`milestone:${m}`, m, body, { trigger: "milestone", milestone: m, target: "/(tabs)/home", celebrate: true }, "high")) {
           continue; // one push per user per tick
         }
       }
     }
 
-    // Remaining daily categories share the 2/day hard cap.
-    if ((await dailySendCount(u.userId, date)) >= DAILY_CAP) continue;
-    if (ringClosed) continue; // rule 2: stop once the ring is closed
+    // Remaining daily categories share the 2/day hard cap (real ticks only).
+    if (!forced && (await dailySendCount(u.userId, date)) >= DAILY_CAP) continue;
+    if (!forced && ringClosed) continue; // rule 2: stop once the ring is closed
 
     // 2) Evening streak nudge (7pm, streak >= 3, not yet checked in today).
-    const fireEvening = u.notifyEvening && withinWindow(minute, hour, EVENING_HOUR, EVENING_MINUTE);
-    if ((opts.force === "evening" || fireEvening) && u.maxStreak >= 3 && checked === 0) {
-      if (!(await alreadyLogged(u.userId, date, "evening"))) {
-        const idx = await pickVariant(u.userId, "evening", EVENING_COPY.length);
-        if (await logSend(u.userId, date, "evening", idx)) {
-          const tokens = await tokensFor(u.userId);
-          const body = fillTemplate(EVENING_COPY[idx], { name: u.displayName, N: u.maxStreak, open, total: u.totalHabits, checked });
-          await sendExpo(tokens.map((to) => ({
-            to, title: "The Rezzies", sound: "default", priority: "high",
-            body, data: { trigger: "evening", target: "/(tabs)/home" },
-          })));
-          sent += tokens.length > 0 ? 1 : 0;
-          continue;
-        }
-      }
+    const fireEvening = !forced && u.notifyEvening && withinWindow(minute, hour, EVENING_HOUR, EVENING_MINUTE);
+    if ((forced === "evening" || fireEvening) && u.maxStreak >= 3 && (forced || checked === 0)) {
+      const idx = await pickVariant(u.userId, "evening", EVENING_COPY.length);
+      const body = fillTemplate(EVENING_COPY[idx], { name: u.displayName, N: u.maxStreak, open, total: u.totalHabits, checked });
+      if (await deliver("evening", idx, body, { trigger: "evening", target: "/(tabs)/home" }, "high")) continue;
     }
 
-    // 3) Mid-day "still have N habits" (12:30pm, not yet checked in today).
-    const fireMidday = u.notifyMidday && withinWindow(minute, hour, MIDDAY_HOUR, MIDDAY_MINUTE);
-    if ((opts.force === "midday" || fireMidday) && checked === 0 && open > 0) {
-      if (!(await alreadyLogged(u.userId, date, "midday"))) {
-        const idx = await pickVariant(u.userId, "midday", MIDDAY_COPY.length);
-        if (await logSend(u.userId, date, "midday", idx)) {
-          const tokens = await tokensFor(u.userId);
-          const body = fillTemplate(MIDDAY_COPY[idx], { name: u.displayName, N: u.maxStreak, open, total: u.totalHabits, checked });
-          await sendExpo(tokens.map((to) => ({
-            to, title: "The Rezzies", sound: "default",
-            body, data: { trigger: "midday", target: "/(tabs)/home" },
-          })));
-          sent += tokens.length > 0 ? 1 : 0;
-          continue;
-        }
-      }
+    // 3) Mid-day "still have N habits" (12:30pm, has open habits today).
+    const fireMidday = !forced && u.notifyMidday && withinWindow(minute, hour, MIDDAY_HOUR, MIDDAY_MINUTE);
+    if ((forced === "midday" || fireMidday) && (forced || (checked === 0 && open > 0))) {
+      const idx = await pickVariant(u.userId, "midday", MIDDAY_COPY.length);
+      const body = fillTemplate(MIDDAY_COPY[idx], { name: u.displayName, N: u.maxStreak, open: Math.max(open, 1), total: u.totalHabits, checked });
+      if (await deliver("midday", idx, body, { trigger: "midday", target: "/(tabs)/home" })) continue;
     }
 
     // 4) Morning reminder (user-configured time, not yet checked in today).
     const [remH, remM] = u.reminderTime.split(":").map(Number);
-    const fireMorning = u.notifyMorning && withinWindow(minute, hour, remH, remM);
-    if ((opts.force === "morning" || fireMorning) && checked === 0) {
-      if (!(await alreadyLogged(u.userId, date, "morning"))) {
-        const idx = await pickVariant(u.userId, "morning", MORNING_COPY.length);
-        if (await logSend(u.userId, date, "morning", idx)) {
-          const tokens = await tokensFor(u.userId);
-          const body = fillTemplate(MORNING_COPY[idx], { name: u.displayName, N: u.maxStreak, open, total: u.totalHabits, checked });
-          await sendExpo(tokens.map((to) => ({
-            to, title: "The Rezzies", sound: "default",
-            body, data: { trigger: "morning", target: "/(tabs)/home" },
-          })));
-          sent += tokens.length > 0 ? 1 : 0;
-          continue;
-        }
-      }
+    const fireMorning = !forced && u.notifyMorning && withinWindow(minute, hour, remH, remM);
+    if ((forced === "morning" || fireMorning) && (forced || checked === 0)) {
+      const idx = await pickVariant(u.userId, "morning", MORNING_COPY.length);
+      const body = fillTemplate(MORNING_COPY[idx], { name: u.displayName, N: u.maxStreak, open, total: u.totalHabits, checked });
+      if (await deliver("morning", idx, body, { trigger: "morning", target: "/(tabs)/home" })) continue;
     }
   }
 
