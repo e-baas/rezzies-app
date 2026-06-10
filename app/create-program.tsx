@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView, Platform, Alert, Switch,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgramStore } from '../src/stores/programStore';
 import { c, radii, space } from '../src/theme/tokens';
 import Logo from '../src/components/brand/Logo';
@@ -68,6 +69,7 @@ const BONUS_TEMPLATES = [
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function CreateProgram() {
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(1); // 1: Shell, 2: Habits, 3: Bonuses, 4: Preview
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -213,7 +215,7 @@ export default function CreateProgram() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + space.md }]}>
         <Logo variant="wordmark" theme="dark" width={132} style={styles.brand} />
         <Text style={styles.title}>Create Program</Text>
         <View style={styles.stepIndicator}>

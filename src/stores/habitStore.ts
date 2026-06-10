@@ -201,7 +201,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
 
   loadLeaderboard: async (programId) => {
     set({ loading: true });
-    const { data: participants } = await supabase.from('participants').select('id, user_id, total_points, total_habits, current_streak, streak_longest').eq('program_id', programId).order('total_habits', { ascending: false });
+    const { data: participants } = await supabase.from('participants').select('id, user_id, total_points, total_habits, current_streak, streak_longest').eq('program_id', programId).order('total_points', { ascending: false });
     if (!participants) { set({ loading: false }); return; }
     const userIds = participants.map((p: any) => p.user_id);
     const { data: profiles } = await supabase.from('profiles').select('id, display_name').in('id', userIds);
@@ -213,7 +213,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     (monthChecks || []).forEach((c: any) => { monthCounts[c.participant_id] = (monthCounts[c.participant_id] || 0) + 1; });
     const entries: LeaderboardEntry[] = participants
       .map((p: any) => ({ user_id: p.user_id, display_name: profileMap[p.user_id] || 'Unknown', habits_month: monthCounts[p.id] || 0, habits_year: p.total_habits, total_points: p.total_points, current_streak: p.current_streak || 0, streak_longest: p.streak_longest || 0, rank: 0 }))
-      .sort((a, b) => { if (b.habits_year !== a.habits_year) return b.habits_year - a.habits_year; if (b.total_points !== a.total_points) return b.total_points - a.total_points; if (b.current_streak !== a.current_streak) return b.current_streak - a.current_streak; return a.display_name.localeCompare(b.display_name); })
+      .sort((a, b) => { if (b.total_points !== a.total_points) return b.total_points - a.total_points; if (b.habits_year !== a.habits_year) return b.habits_year - a.habits_year; if (b.current_streak !== a.current_streak) return b.current_streak - a.current_streak; return a.display_name.localeCompare(b.display_name); })
       .map((e, i) => ({ ...e, rank: i + 1 }));
     set({ leaderboard: entries, loading: false });
   },
