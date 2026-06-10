@@ -504,7 +504,17 @@ export default function CreateProgram() {
             <View />
           )}
           {step < 4 ? (
-            <TouchableOpacity style={styles.nextBtn} onPress={() => setStep(step + 1)}>
+            <TouchableOpacity
+              style={[styles.nextBtn, step === 1 && !name.trim() && styles.nextBtnDisabled]}
+              disabled={step === 1 && !name.trim()}
+              onPress={() => {
+                if (step === 1 && !name.trim()) {
+                  Alert.alert('Program name needed', 'Please enter a program name before continuing.');
+                  return;
+                }
+                setStep(step + 1);
+              }}
+            >
               <Text style={styles.nextText}>Next</Text>
             </TouchableOpacity>
           ) : (
@@ -668,7 +678,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: c.primary,
-    width: 32,
+    minWidth: 42,
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
@@ -870,6 +880,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: radii.md,
   },
+  nextBtnDisabled: { opacity: 0.45 },
   nextText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   createBtn: {
     backgroundColor: c.primary,

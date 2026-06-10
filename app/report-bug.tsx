@@ -57,6 +57,18 @@ export default function ReportBugScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            disabled={submitting}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.cancelLink}>‹ Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Report a Bug</Text>
+          <View style={{ width: 56 }} />
+        </View>
+
         <Text style={styles.label}>What happened?</Text>
         <TextInput
           style={styles.textarea}
@@ -106,6 +118,14 @@ export default function ReportBugScreen() {
             {submitting ? 'Sending…' : 'Send Bug Report'}
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cancelBtn}
+          onPress={() => router.back()}
+          disabled={submitting}
+        >
+          <Text style={styles.cancelBtnText}>Cancel — back to app</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -114,6 +134,20 @@ export default function ReportBugScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { padding: 16, paddingBottom: 40 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerTitle: { fontSize: 16, fontWeight: '800', color: '#1F2937' },
+  cancelLink: { fontSize: 16, fontWeight: '700', color: '#6366F1', width: 56 },
+  cancelBtn: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  cancelBtnText: { color: '#6B7280', fontWeight: '700', fontSize: 15 },
   label: { fontSize: 14, fontWeight: '700', color: '#1F2937', marginBottom: 8 },
   textarea: {
     backgroundColor: 'white',
