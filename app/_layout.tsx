@@ -49,11 +49,13 @@ export default function RootLayout() {
     <ErrorBoundary>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="(tabs)" />
-        ) : (
-          <Stack.Screen name="(auth)" />
-        )}
+        {/* Both route groups are always declared so navigation never lands on
+            an unregistered screen. Access control lives in each group's
+            _layout via a Redirect guard (Bug #1): (auth) bounces signed-in
+            users to the program, (tabs) bounces unauthenticated users to
+            sign-in. The entry route (index) picks the correct group on launch. */}
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
         <Stack.Screen name="report-bug" options={{ headerShown: true, title: 'Report a Bug', presentation: 'modal' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications', presentation: 'modal' }} />
       </Stack>
