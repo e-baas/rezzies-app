@@ -13,12 +13,21 @@ interface SubmitBugInput {
 }
 
 /**
- * Insert a single row into `bug_reports`. Auto-attaches the signed-in
- * user, email, and a device-context snapshot. Returns the inserted row
- * id (or null on failure — we never crash the host caller).
+ * Insert a single row into `bug_reports`. Auto-attaches the signed-in user,
+ * email, and a device-context snapshot.
+ *
+ * IMPORTANT (TYC-166): this does a plain INSERT with NO `.select()`/RETURNING.
+ * The SELECT RLS policy on `bug_reports` only lets devs + program sponsors read
+ * rows, so an `insert().select()` forces a RETURNING that the regular pilot
+ * family (a non-sponsor participant) — and any anonymous user — cannot satisfy.
+ * That made the whole insert fail RLS and silently roll back: only sponsor/dev
+ * accounts ever persisted reports. Inserting without RETURNING lets every
+ * authenticated user (and anonymous submissions via the migration-008 anon
+ * policy) write their own report. We return `{ ok }` instead of a row id since
+ * the caller never needs the id and we cannot read it back under RLS anyway.
  */
 export async function submitBugReport(input: SubmitBugInput): Promise<{
-  id: string | null;
+  ok: boolean;
   error: string | null;
 }> {
   try {
@@ -41,19 +50,30 @@ export async function submitBugReport(input: SubmitBugInput): Promise<{
       app_build: ctx.app_build,
     };
 
-    const { data, error } = await supabase
-      .from('bug_reports')
-      .insert(row)
-      .select('id')
-      .single();
+    // No `.select()` — see the note above. We only need the error.
+    const { error } = await supabase.from('bug_reports').insert(row);
 
     if (error) {
-      console.warn('[bugReports] insert failed', error.message);
-      return { id: null, error: error.message };
+      // Visibility: log loudly (console.error, not warn) with enough context to
+      // diagnose silent drops, and surface a clearer message for RLS rejections.
+      const isRls =
+        /row-level security|violates row-level/i.test(error.message) ||
+        error.code === '42501';
+      console.error('[bugReports] insert failed', {
+        message: error.message,
+        code: (error as any).code ?? null,
+        authed: !!user,
+        source: row.source,
+        screen: row.screen_name,
+      });
+      const friendly = isRls
+        ? 'Your report could not be saved (permission). Please sign in and try again.'
+        : error.message;
+      return { ok: false, error: friendly };
     }
-    return { id: data?.id ?? null, error: null };
+    return { ok: true, error: null };
   } catch (e: any) {
-    console.warn('[bugReports] submit threw', e?.message ?? e);
-    return { id: null, error: e?.message ?? 'unknown' };
+    console.error('[bugReports] submit threw', e?.message ?? e);
+    return { ok: false, error: e?.message ?? 'unknown' };
   }
 }

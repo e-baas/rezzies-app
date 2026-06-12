@@ -32,14 +32,14 @@ export default function ReportBugScreen() {
       return;
     }
     setSubmitting(true);
-    const { id, error } = await submitBugReport({
+    const { ok, error } = await submitBugReport({
       description: trimmed,
       severity,
       source: 'manual',
       screen_name: 'report-bug',
     });
     setSubmitting(false);
-    if (error || !id) {
+    if (!ok) {
       Alert.alert(
         'Could not send',
         error || 'Something went wrong. Check your connection and try again.'
