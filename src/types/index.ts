@@ -149,7 +149,15 @@ export interface ScoringResult {
 // === Bug Reports / Crash Captures ===
 export type BugSeverity = 'low' | 'annoying' | 'blocks';
 export type BugSource = 'manual' | 'js_error' | 'native_crash' | 'unhandled_promise';
-export type BugStatus = 'open' | 'triaged' | 'fixed' | 'wontfix';
+export type BugStatus =
+  | 'open'
+  | 'triaged'
+  | 'in_progress'
+  | 'fixed_untested'
+  | 'fixed_tested'
+  | 'closed'
+  | 'wont_fix';
+export type BugPriority = 'P0' | 'P1' | 'P2' | 'P3';
 
 export interface BugReport {
   id: string;
@@ -166,9 +174,14 @@ export interface BugReport {
   app_build: string | null;
   stack_trace: string | null;
   status: BugStatus;
+  priority: BugPriority | null;
+  assigned_to: string | null;
+  fix_commit: string | null;
   created_at: string;
   triaged_at: string | null;
   fixed_at: string | null;
+  tested_at: string | null;
+  closed_at: string | null;
 }
 
 // === Navigation ===

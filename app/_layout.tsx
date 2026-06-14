@@ -56,7 +56,11 @@ export default function RootLayout() {
             sign-in. The entry route (index) picks the correct group on launch. */}
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="report-bug" options={{ headerShown: true, title: 'Report a Bug', presentation: 'modal' }} />
+        {/* No native header: the screen renders its own header row with a
+            "‹ Cancel" back link + title. Showing the native modal header too
+            produced a duplicate title and a stray top-right cancel button
+            (user reports 2026-06-13). */}
+        <Stack.Screen name="report-bug" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications', presentation: 'modal' }} />
       </Stack>
     </ErrorBoundary>
