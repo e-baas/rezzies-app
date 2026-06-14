@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '../src/stores/authStore';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { BetaBugOverlay } from '../src/components/BetaBugOverlay';
 import { installErrorReporter } from '../src/lib/errorReporter';
 import { initSentry } from '../src/lib/sentry';
 import {
@@ -48,6 +49,9 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <StatusBar style="light" />
+      {/* Beta-only floating bug button (bugs #11/#12). Wraps the whole nav tree
+          so it floats on every screen; it is a pass-through in production. */}
+      <BetaBugOverlay>
       <Stack screenOptions={{ headerShown: false }}>
         {/* Both route groups are always declared so navigation never lands on
             an unregistered screen. Access control lives in each group's
@@ -63,6 +67,7 @@ export default function RootLayout() {
         <Stack.Screen name="report-bug" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications', presentation: 'modal' }} />
       </Stack>
+      </BetaBugOverlay>
     </ErrorBoundary>
   );
 }

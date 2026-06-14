@@ -8,6 +8,8 @@ interface SubmitBugInput {
   source?: BugSource;
   screen_name?: string | null;
   stack_trace?: string | null;
+  // public URL of an attached screenshot (uploaded to the bug-screenshots bucket)
+  screenshot_url?: string | null;
   // override the snapshot — useful for the error reporter
   device_override?: Partial<ReturnType<typeof getDeviceContext>>;
 }
@@ -42,6 +44,7 @@ export async function submitBugReport(input: SubmitBugInput): Promise<{
       severity: input.severity ?? 'annoying',
       source: input.source ?? 'manual',
       screen_name: input.screen_name ?? null,
+      screenshot_url: input.screenshot_url ?? null,
       stack_trace: input.stack_trace ? input.stack_trace.slice(0, 8000) : null,
       device_model: ctx.device_model,
       os_platform: ctx.os_platform,

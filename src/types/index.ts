@@ -167,6 +167,7 @@ export interface BugReport {
   severity: BugSeverity;
   source: BugSource;
   screen_name: string | null;
+  screenshot_url: string | null;
   device_model: string | null;
   os_platform: string | null;
   os_version: string | null;

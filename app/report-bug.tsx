@@ -118,14 +118,6 @@ export default function ReportBugScreen() {
             {submitting ? 'Sending…' : 'Send Bug Report'}
           </Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.cancelBtn}
-          onPress={() => router.back()}
-          disabled={submitting}
-        >
-          <Text style={styles.cancelBtnText}>Cancel — back to app</Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -142,12 +134,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 16, fontWeight: '800', color: '#1F2937' },
   cancelLink: { fontSize: 16, fontWeight: '700', color: '#6366F1', width: 56 },
-  cancelBtn: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  cancelBtnText: { color: '#6B7280', fontWeight: '700', fontSize: 15 },
   label: { fontSize: 14, fontWeight: '700', color: '#1F2937', marginBottom: 8 },
   textarea: {
     backgroundColor: 'white',

@@ -90,7 +90,7 @@ async function main() {
   // so a given report keeps the same number across refreshes regardless of display sort.
   const allRows = (await c.query(
     `SELECT id, user_email, description, severity, source, status, priority,
-            screen_name, device_model, os_platform, os_version, app_version,
+            screen_name, screenshot_url, device_model, os_platform, os_version, app_version,
             app_build, assigned_to, fix_commit,
             created_at, triaged_at, fixed_at, tested_at, closed_at,
             ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) AS bug_number
@@ -113,8 +113,8 @@ async function main() {
   }).slice(0, 50);
 
   const tableHeader =
-    '| # | Pri | Status | Sev | When | User | Screen | Description | Device | Commit | Resolved |\n' +
-    '|---|---|---|---|---|---|---|---|---|---|---|';
+    '| # | Pri | Status | Sev | When | User | Screen | Description | Shot | Device | Commit | Resolved |\n' +
+    '|---|---|---|---|---|---|---|---|---|---|---|---|';
   const tableRows = display.map((r) => {
     const desc = (r.description || '').replace(/\|/g, '\\|').replace(/\n/g, ' ').slice(0, 120);
     const device = [
@@ -125,7 +125,8 @@ async function main() {
     const commit = r.fix_commit ? `\`${String(r.fix_commit).slice(0, 7)}\`` : '';
     const resolved = fmtDate(r.closed_at || r.tested_at || r.fixed_at);
     const sev = `${severityEmoji(r.severity)} ${r.severity}`;
-    return `| ${r.bug_number} | ${r.priority || 'P2'} | ${statusLabel(r.status)} | ${sev} | ${fmtDateTime(r.created_at)} | ${r.user_email || '—'} | ${r.screen_name || '—'} | ${desc} | ${device || '—'} | ${commit || '—'} | ${resolved || '—'} |`;
+    const shot = r.screenshot_url ? `[📷](${r.screenshot_url})` : '—';
+    return `| ${r.bug_number} | ${r.priority || 'P2'} | ${statusLabel(r.status)} | ${sev} | ${fmtDateTime(r.created_at)} | ${r.user_email || '—'} | ${r.screen_name || '—'} | ${desc} | ${shot} | ${device || '—'} | ${commit || '—'} | ${resolved || '—'} |`;
   });
 
   const body = `# Bug Reports — Dev Review
