@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { localDateString, localMonthStart } from '../lib/dates';
 import type { DailyCheck, BonusProgress, LeaderboardEntry } from '../types';
 
 interface HabitState {
@@ -41,9 +42,9 @@ async function recalculateStreak(
   }
   const sortedDays = Array.from(checkDays).sort().reverse(); // newest first
 
-  // Check if today has any checked habits
-  const todayStr = new Date().toISOString().split('T')[0];
-  const today = new Date(todayStr);
+  // Use the device-LOCAL calendar day (not UTC) so streaks line up with the
+  // days the user actually lived (bug #16).
+  const today = new Date();
 
   // Current streak: count consecutive days backward from today
   let streak = 0;
@@ -60,7 +61,7 @@ async function recalculateStreak(
   // Check each day starting from today, going backward
   const checkDate = new Date(today);
   while (true) {
-    const dateStr = checkDate.toISOString().split('T')[0];
+    const dateStr = localDateString(checkDate);
     const hadCheck = sortedDays.includes(dateStr);
 
     if (hadCheck) {
@@ -103,8 +104,6 @@ async function recalculateStreak(
  * Recalculate total_habits and total_points for a participant from daily_checks.
  */
 async function recalculateTotals(participantId: string, habitPointsMap: Record<string, number>) {
-  const todayStr = new Date().toISOString().split('T')[0];
-
   // Get all time checked habits
   const { data: allChecks } = await supabase
     .from('daily_checks')
@@ -130,7 +129,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   todayChecks: [], bonusProgress: [], leaderboard: [], loading: false,
 
   loadTodayChecks: async (participantId, habitIds) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     const { data } = await supabase.from('daily_checks').select('*').eq('participant_id', participantId).eq('date', today);
     const existing = data || [];
     set({ todayChecks: habitIds.map((habitId) => {
@@ -207,7 +206,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     const { data: profiles } = await supabase.from('profiles').select('id, display_name').in('id', userIds);
     const profileMap: Record<string, string> = {};
     (profiles || []).forEach((p: any) => { profileMap[p.id] = p.display_name; });
-    const now = new Date(); const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const monthStart = localMonthStart();
     const { data: monthChecks } = await supabase.from('daily_checks').select('participant_id').eq('checked', true).gte('date', monthStart).in('participant_id', participants.map((p: any) => p.id));
     const monthCounts: Record<string, number> = {};
     (monthChecks || []).forEach((c: any) => { monthCounts[c.participant_id] = (monthCounts[c.participant_id] || 0) + 1; });

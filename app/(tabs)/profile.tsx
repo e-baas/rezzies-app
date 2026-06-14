@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
+import { useProgramStore } from '../../src/stores/programStore';
+import { ProgramSwitcher } from '../../src/components/ProgramSwitcher';
 import { isDevUser } from '../../src/lib/devEmails';
 import { submitBugReport } from '../../src/lib/bugReports';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuthStore();
+  const memberships = useProgramStore((s) => s.memberships);
+  const loadMyPrograms = useProgramStore((s) => s.loadMyPrograms);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false); // bug #17
   const isDev = isDevUser(user?.email);
+
+  // Keep the membership list fresh so "Switch Program" appears once the user
+  // belongs to more than one program.
+  useFocusEffect(useCallback(() => { loadMyPrograms(); }, []));
 
   const handleSignOut = async () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -59,6 +68,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
+        {memberships.length > 1 && (
+          <TouchableOpacity style={styles.menuItem} onPress={() => setSwitcherOpen(true)}>
+            <Text style={styles.menuEmoji}>🔄</Text>
+            <Text style={styles.menuText}>Switch Program</Text>
+            <Text style={styles.menuCount}>{memberships.length}</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/create-program')}>
           <Text style={styles.menuEmoji}>🎯</Text>
           <Text style={styles.menuText}>Create New Program</Text>
@@ -69,6 +86,8 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>Join Program</Text>
         </TouchableOpacity>
       </View>
+
+      <ProgramSwitcher visible={switcherOpen} onClose={() => setSwitcherOpen(false)} />
 
       <View style={styles.section}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications')}>
@@ -144,6 +163,16 @@ const styles = StyleSheet.create({
   },
   menuEmoji: { fontSize: 20, marginRight: 12 },
   menuText: { fontSize: 16, fontWeight: '500', color: '#1F2937', flex: 1 },
+  menuCount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6B7280',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
   logoutText: { color: '#EF4444' },
   devHeader: {
     paddingHorizontal: 16,

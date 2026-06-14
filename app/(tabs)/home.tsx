@@ -7,6 +7,7 @@ import { useHabitStore } from '../../src/stores/habitStore';
 import { ProgressRing } from '../../src/components/ProgressRing';
 import { HabitChecklist } from '../../src/components/HabitChecklist';
 import { BonusProgressList } from '../../src/components/BonusProgress';
+import { ProgramSwitcher } from '../../src/components/ProgramSwitcher';
 import { supabase } from '../../src/lib/supabase';
 import { calculateDailyPoints } from '../../src/engine/scoring';
 import { c, radii, space } from '../../src/theme/tokens';
@@ -14,6 +15,9 @@ import { c, radii, space } from '../../src/theme/tokens';
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
   const { habits, monthlyBonuses, loadHabits, loadBonuses, currentProgram, loadProgram } = useProgramStore();
+  const memberships = useProgramStore((s) => s.memberships);
+  const activeProgramId = useProgramStore((s) => s.activeProgramId);
+  const loadMyPrograms = useProgramStore((s) => s.loadMyPrograms);
   const { todayChecks, bonusProgress, loadTodayChecks, loadBonusProgress } = useHabitStore();
   const [programId, setProgramId] = useState<string | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
@@ -22,28 +26,41 @@ export default function HomeScreen() {
   const [monthPoints, setMonthPoints] = useState(0);
   const [groupRank, setGroupRank] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false); // bug #17
 
   const loadData = useCallback(async () => {
     if (!user) return;
+
+    // Bug #17: a user can belong to multiple programs. Resolve the membership
+    // list, then operate on the user's chosen ACTIVE program (persisted) rather
+    // than always grabbing the most-recent join.
+    const mems = await loadMyPrograms();
+    const active = useProgramStore.getState().activeProgramId;
+    const membership = mems.find((m) => m.programId === active) || mems[0];
+
+    if (!membership) {
+      setProgramId(null);
+      setParticipantId(null);
+      return;
+    }
+    setProgramId(membership.programId);
+    setParticipantId(membership.participantId);
+
     const { data: participant } = await supabase
       .from('participants')
-      .select('id, program_id, current_streak, streak_longest, total_points')
-      .eq('user_id', user.id)
-      .order('joined_at', { ascending: false })
-      .limit(1)
+      .select('id, current_streak, streak_longest, total_points')
+      .eq('id', membership.participantId)
       .single();
-
-    if (!participant) return;
-    setProgramId(participant.program_id);
-    setParticipantId(participant.id);
-    setStreak(participant.current_streak || 0);
-    setStreakLongest(participant.streak_longest || 0);
-    setMonthPoints(participant.total_points || 0);
+    if (participant) {
+      setStreak(participant.current_streak || 0);
+      setStreakLongest(participant.streak_longest || 0);
+      setMonthPoints(participant.total_points || 0);
+    }
 
     await Promise.all([
-      loadProgram(participant.program_id),
-      loadHabits(participant.program_id),
-      loadBonuses(participant.program_id),
+      loadProgram(membership.programId),
+      loadHabits(membership.programId),
+      loadBonuses(membership.programId),
     ]);
 
     // Best-effort group rank: rank among participants in the same program by total_points desc.
@@ -51,10 +68,10 @@ export default function HomeScreen() {
       const { data: peers } = await supabase
         .from('participants')
         .select('id, total_points')
-        .eq('program_id', participant.program_id)
+        .eq('program_id', membership.programId)
         .order('total_points', { ascending: false });
       if (peers) {
-        const idx = peers.findIndex((p: any) => p.id === participant.id);
+        const idx = peers.findIndex((p: any) => p.id === membership.participantId);
         setGroupRank(idx >= 0 ? idx + 1 : null);
       }
     } catch {
@@ -62,7 +79,8 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  // Re-run when the user switches programs (activeProgramId changes).
+  useEffect(() => { loadData(); }, [loadData, activeProgramId]);
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
   useEffect(() => {
@@ -113,16 +131,27 @@ export default function HomeScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.secondary} />
       }
     >
-      {/* Program name + streak pill */}
+      {/* Program name + streak pill. Tapping the name opens the switcher when
+          the user belongs to more than one program (bug #17). */}
       <View style={styles.programHeader}>
         {currentProgram && (
-          <Text style={styles.programName} numberOfLines={1}>{currentProgram.name}</Text>
+          <TouchableOpacity
+            style={styles.programNameWrap}
+            activeOpacity={memberships.length > 1 ? 0.6 : 1}
+            disabled={memberships.length <= 1}
+            onPress={() => setSwitcherOpen(true)}
+          >
+            <Text style={styles.programName} numberOfLines={1}>{currentProgram.name}</Text>
+            {memberships.length > 1 && <Text style={styles.programChevron}> ⌄</Text>}
+          </TouchableOpacity>
         )}
         <View style={styles.streakPill}>
           <Text style={styles.streakEmoji}>🔥</Text>
           <Text style={styles.streakNum}>{streak}</Text>
         </View>
       </View>
+
+      <ProgramSwitcher visible={switcherOpen} onClose={() => setSwitcherOpen(false)} />
 
       {/* Ring card */}
       <View style={styles.ringCard}>
@@ -180,13 +209,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  programName: {
+  programNameWrap: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  programName: {
+    flexShrink: 1,
     fontSize: 17,
     fontWeight: '700',
     color: c.text,
     letterSpacing: -0.2,
-    marginRight: 12,
+  },
+  programChevron: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: c.text2,
   },
   streakPill: {
     flexDirection: 'row',

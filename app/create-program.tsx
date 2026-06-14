@@ -90,8 +90,20 @@ export default function CreateProgram() {
   const [bonuses, setBonuses] = useState<NewBonus[]>([]);
   const [loading, setLoading] = useState(false);
   const [createdInviteCode, setCreatedInviteCode] = useState('');
+  const [nameError, setNameError] = useState(false); // bug #14: inline validation message
 
   const createProgram = useProgramStore((s) => s.createProgram);
+
+  // Bug #13: leaving the Create Program flow. The screen is pushed onto the
+  // stack, so go back to wherever we came from; fall back to Home if this is
+  // somehow the root (e.g. deep link).
+  const handleCancel = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/home');
+    }
+  };
 
   const toggleHabit = (index: number) => {
     const updated = [...habits];
@@ -235,7 +247,16 @@ export default function CreateProgram() {
             <Text style={styles.sectionTitle}>Program Shell</Text>
 
             <Text style={styles.label}>Program Name *</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g., 2026 Rezzies" placeholderTextColor="#9CA3AF" />
+            <TextInput
+              style={[styles.input, nameError && styles.inputError]}
+              value={name}
+              onChangeText={(t) => { setName(t); if (nameError && t.trim()) setNameError(false); }}
+              placeholder="e.g., 2026 Rezzies"
+              placeholderTextColor="#9CA3AF"
+            />
+            {nameError && (
+              <Text style={styles.errorText}>Please enter a program name to continue.</Text>
+            )}
 
             <Text style={styles.label}>Group Name</Text>
             <TextInput style={styles.input} value={groupName} onChangeText={setGroupName} placeholder="e.g., The Rezzies 2026" placeholderTextColor="#9CA3AF" />
@@ -503,14 +524,19 @@ export default function CreateProgram() {
               <Text style={styles.backText}>Back</Text>
             </TouchableOpacity>
           ) : (
-            <View />
+            // Bug #13: a way out of the Create Program flow from the first step.
+            <TouchableOpacity style={styles.backBtn} onPress={handleCancel}>
+              <Text style={styles.backText}>Cancel</Text>
+            </TouchableOpacity>
           )}
           {step < 4 ? (
             <TouchableOpacity
-              style={[styles.nextBtn, step === 1 && !name.trim() && styles.nextBtnDisabled]}
-              disabled={step === 1 && !name.trim()}
+              style={styles.nextBtn}
               onPress={() => {
+                // Bug #14: validation blocks progress with a clear message
+                // (inline + alert) instead of a silently-disabled button.
                 if (step === 1 && !name.trim()) {
+                  setNameError(true);
                   Alert.alert('Program name needed', 'Please enter a program name before continuing.');
                   return;
                 }
@@ -602,6 +628,14 @@ const styles = StyleSheet.create({
     marginBottom: space.sm,
   },
   textarea: { minHeight: 80, textAlignVertical: 'top' },
+  inputError: { borderColor: c.danger },
+  errorText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: c.danger,
+    marginTop: -4,
+    marginBottom: space.sm,
+  },
   dateRow: { flexDirection: 'row' },
 
   // Prize options

@@ -13,6 +13,7 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import type { HabitDefinition, DailyCheck } from '../types';
 import { useHabitStore } from '../stores/habitStore';
+import { localDateString } from '../lib/dates';
 import { c, radii, motion, text as textTokens, space } from '../theme/tokens';
 
 interface Props {
@@ -83,7 +84,7 @@ function HabitRow({ habit, checked, onToggle }: RowProps) {
 
 export function HabitChecklist({ habits, checks, participantId }: Props) {
   const toggleHabit = useHabitStore((s) => s.toggleHabit);
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
 
   const checkedMap: Record<string, boolean> = {};
   checks.forEach((ch) => { checkedMap[ch.habit_id] = ch.checked; });

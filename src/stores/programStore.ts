@@ -1,6 +1,19 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import type { Program, HabitDefinition, MonthlyBonus, Participant } from '../types';
+
+// Persisted key for the user's chosen "active" program (bug #17).
+const ACTIVE_PROGRAM_KEY = 'rezzies.activeProgramId';
+
+/** One program the signed-in user belongs to (for the switcher). */
+export interface Membership {
+  participantId: string;
+  programId: string;
+  programName: string;
+  role: string;
+  joinedAt: string;
+}
 
 interface ProgramState {
   currentProgram: Program | null;
@@ -8,6 +21,10 @@ interface ProgramState {
   monthlyBonuses: MonthlyBonus[];
   participants: Participant[];
   loading: boolean;
+
+  // Multi-program membership + active selection (bug #17 — program switching).
+  memberships: Membership[];
+  activeProgramId: string | null;
 
   createProgram: (data: {
     name: string; description: string; groupName: string;
@@ -23,10 +40,16 @@ interface ProgramState {
   loadHabits: (programId: string) => Promise<void>;
   loadBonuses: (programId: string) => Promise<void>;
   loadParticipants: (programId: string) => Promise<void>;
+
+  /** Load all programs the signed-in user belongs to + restore the active one. */
+  loadMyPrograms: () => Promise<Membership[]>;
+  /** Persist + switch the active program (bug #17). */
+  setActiveProgram: (programId: string) => Promise<void>;
 }
 
-export const useProgramStore = create<ProgramState>((set) => ({
+export const useProgramStore = create<ProgramState>((set, get) => ({
   currentProgram: null, habits: [], monthlyBonuses: [], participants: [], loading: false,
+  memberships: [], activeProgramId: null,
 
   createProgram: async (data) => {
     const user = (await supabase.auth.getSession()).data.session?.user;
@@ -98,17 +121,27 @@ export const useProgramStore = create<ProgramState>((set) => ({
   },
 
   joinProgram: async (inviteCode) => {
-    const user = (await supabase.auth.getSession()).data.session?.user;
-    if (!user) return { error: 'Not authenticated' };
-    const { data: program, error } = await supabase.from('programs').select('*').eq('invite_code', inviteCode.toUpperCase()).single();
-    if (error || !program) return { error: 'Invalid invite code' };
-    const { data: existing } = await supabase.from('participants').select('id').eq('user_id', user.id).eq('program_id', program.id).single();
-    if (existing) return { programId: program.id, programName: program.name };
-    await supabase.from('participants').insert({
-      user_id: user.id, program_id: program.id, role: 'PARTICIPANT', group_role: 'MEMBER',
-      total_points: 0, total_habits: 0, current_streak: 0, streak_longest: 0, health_data_consent: false,
-    });
-    return { programId: program.id, programName: program.name };
+    // A user joining by invite code is not yet a participant or sponsor, so RLS
+    // blocks a direct `programs` SELECT by invite_code (this was bug #15 — every
+    // valid code reported "Invalid invite code"). The join now goes through a
+    // SECURITY DEFINER RPC (migration 011) that resolves the code + inserts the
+    // membership on the server, scoped to the caller's own auth.uid().
+    const code = (inviteCode || '').trim();
+    if (!code) return { error: 'Please enter an invite code' };
+
+    const { data, error } = await supabase.rpc('join_program_by_code', { p_code: code });
+    if (error) return { error: error.message || 'Could not join program' };
+    if (!data || data.ok !== true) {
+      return { error: (data && data.error) || 'Invalid invite code' };
+    }
+
+    // Make the freshly-joined program the active one + refresh memberships so
+    // the home/leaderboard screens land on it immediately.
+    if (data.program_id) {
+      await get().setActiveProgram(data.program_id);
+      await get().loadMyPrograms();
+    }
+    return { programId: data.program_id, programName: data.program_name };
   },
 
   loadProgram: async (programId) => {
@@ -127,5 +160,44 @@ export const useProgramStore = create<ProgramState>((set) => ({
   loadParticipants: async (programId) => {
     const { data } = await supabase.from('participants').select('*').eq('program_id', programId).order('total_habits', { ascending: false });
     set({ participants: (data || []) as Participant[] });
+  },
+
+  loadMyPrograms: async () => {
+    const user = (await supabase.auth.getSession()).data.session?.user;
+    if (!user) {
+      set({ memberships: [], activeProgramId: null });
+      return [];
+    }
+    // Embed the program name via the participants → programs FK. RLS allows
+    // reading these programs because the user is a participant of each.
+    const { data } = await supabase
+      .from('participants')
+      .select('id, program_id, role, joined_at, programs(name)')
+      .eq('user_id', user.id)
+      .order('joined_at', { ascending: false });
+
+    const memberships: Membership[] = (data || []).map((p: any) => ({
+      participantId: p.id,
+      programId: p.program_id,
+      role: p.role,
+      joinedAt: p.joined_at,
+      programName: (p.programs && (Array.isArray(p.programs) ? p.programs[0]?.name : p.programs.name)) || 'Program',
+    }));
+
+    // Restore the persisted active program; fall back to the most recent join
+    // if the stored one is gone (e.g. left the program) or never set.
+    let active: string | null = null;
+    try { active = await AsyncStorage.getItem(ACTIVE_PROGRAM_KEY); } catch { /* ignore */ }
+    if (!active || !memberships.some((m) => m.programId === active)) {
+      active = memberships[0]?.programId ?? null;
+    }
+
+    set({ memberships, activeProgramId: active });
+    return memberships;
+  },
+
+  setActiveProgram: async (programId) => {
+    try { await AsyncStorage.setItem(ACTIVE_PROGRAM_KEY, programId); } catch { /* ignore */ }
+    set({ activeProgramId: programId });
   },
 }));

@@ -3,8 +3,8 @@ import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native
 import { useFocusEffect } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useHabitStore } from '../../src/stores/habitStore';
+import { useProgramStore } from '../../src/stores/programStore';
 import { LeaderboardRow } from '../../src/components/LeaderboardRow';
-import { supabase } from '../../src/lib/supabase';
 import { c, radii, space } from '../../src/theme/tokens';
 
 // Visual polish v2 (TYC-137): dark canvas, orange RefreshControl tint
@@ -15,23 +15,30 @@ import { c, radii, space } from '../../src/theme/tokens';
 export default function LeaderboardScreen() {
   const user = useAuthStore((s) => s.user);
   const { leaderboard, loading, loadLeaderboard } = useHabitStore();
+  const activeProgramId = useProgramStore((s) => s.activeProgramId);
+  const loadMyPrograms = useProgramStore((s) => s.loadMyPrograms);
   const [programId, setProgramId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
-    const { data: participant } = await supabase
-      .from('participants')
-      .select('program_id')
-      .eq('user_id', user.id)
-      .single();
-    if (participant) {
-      setProgramId(participant.program_id);
-      await loadLeaderboard(participant.program_id);
+    // Bug #17: a user can be in multiple programs (the old `.single()` lookup
+    // errored for them). Use the shared ACTIVE program so the leaderboard
+    // matches the program shown on Home.
+    const mems = await loadMyPrograms();
+    const active = useProgramStore.getState().activeProgramId;
+    const target = active || mems[0]?.programId || null;
+    if (target) {
+      setProgramId(target);
+      await loadLeaderboard(target);
+    } else {
+      setProgramId(null);
     }
   }, [user]);
 
   useFocusEffect(useCallback(() => { load(); }, []));
+  // Re-run when the user switches programs from Home.
+  useEffect(() => { load(); }, [activeProgramId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
