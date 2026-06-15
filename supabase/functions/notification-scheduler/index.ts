@@ -286,26 +286,32 @@ async function sendExpo(messages: PushMsg[]): Promise<void> {
 
 // ── Core: decide + send one notification per user ─────────────
 
-async function runScheduler(opts: { force?: string } = {}): Promise<{ sent: number; evaluated: number }> {
-  const states = await loadUserStates();
+async function runScheduler(opts: { force?: string; userId?: string } = {}): Promise<{ sent: number; evaluated: number }> {
+  const all = await loadUserStates();
+  // A forced verification call may target a single user (?user=<uuid>) so a
+  // test never notifies other pilot members.
+  const states = opts.userId ? all.filter((u) => u.userId === opts.userId) : all;
   let sent = 0;
 
   for (const u of states) {
+    const forced = opts.force;
+
     // ── Universal gates ──
-    if (!u.notificationsEnabled) continue;                       // master switch
+    if (!u.notificationsEnabled) continue;                       // master switch (respected even when forced)
     if (u.pausedUntil && new Date(u.pausedUntil) > new Date()) continue; // vacation pause
 
     const { hour, minute, date } = localParts(u.timezone);
     if (hour < 0 || !date) continue;                             // bad timezone
 
-    // 48h honeymoon
-    if (u.createdAt) {
+    // 48h honeymoon — timing gate, bypassed by an explicit forced test.
+    if (!forced && u.createdAt) {
       const ageH = (Date.now() - new Date(u.createdAt).getTime()) / 3_600_000;
       if (ageH < HONEYMOON_HOURS) continue;
     }
 
-    // Quiet hours (applies to every category)
-    if (hour >= QUIET_START_HOUR || hour < QUIET_END_HOUR) continue;
+    // Quiet hours — timing gate, bypassed by an explicit forced test so the
+    // chairman can verify at any hour (real cron ticks still respect it).
+    if (!forced && (hour >= QUIET_START_HOUR || hour < QUIET_END_HOUR)) continue;
 
     const checked = await checkedToday(u.participantIds, date);
     const open = Math.max(0, u.totalHabits - checked);
@@ -313,10 +319,10 @@ async function runScheduler(opts: { force?: string } = {}): Promise<{ sent: numb
 
     // `forced` = an on-demand verification call (?force=<category>). A forced
     // call fires exactly that one category regardless of time window, check-in
-    // state, ring-closed, or the 2/day cap, and does NOT write notification_log
-    // (so it can be repeated and never pollutes real cadence/idempotency). Real
-    // cron ticks pass no force, so their behaviour is unchanged.
-    const forced = opts.force;
+    // state, ring-closed, quiet hours, honeymoon, or the 2/day cap, and does NOT
+    // write notification_log (so it can be repeated and never pollutes real
+    // cadence/idempotency). Real cron ticks pass no force, so their behaviour is
+    // unchanged.
 
     // Shared sender. For forced calls we skip logSend entirely; for real ticks
     // logSend both records the send and enforces idempotency (unique row).
@@ -338,7 +344,7 @@ async function runScheduler(opts: { force?: string } = {}): Promise<{ sent: numb
 
     // ── Choose the single category to fire this tick (priority order) ──
     // 1) Milestone celebration (does not count toward the daily cap).
-    if ((forced === "milestone" || (!forced && u.notifyMilestone)) && hour >= MILESTONE_OPEN_HOUR && hour < MILESTONE_CLOSE_HOUR) {
+    if ((forced === "milestone" || (!forced && u.notifyMilestone)) && (forced || (hour >= MILESTONE_OPEN_HOUR && hour < MILESTONE_CLOSE_HOUR))) {
       const m = MILESTONES.find((x) => x === u.maxStreak);
       if (m && (forced || !(await milestoneAlreadySent(u.userId, m)))) {
         const body = fillTemplate(MILESTONE_COPY[m], { name: u.displayName, N: m });
@@ -394,8 +400,9 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url);
   if (url.pathname.endsWith("/run") && req.method === "POST") {
     const force = url.searchParams.get("force") ?? undefined;
+    const userId = url.searchParams.get("user") ?? undefined;
     try {
-      const result = await runScheduler({ force: force ?? undefined });
+      const result = await runScheduler({ force: force ?? undefined, userId: userId ?? undefined });
       return new Response(JSON.stringify({ ok: true, ...result }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
