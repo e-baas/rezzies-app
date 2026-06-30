@@ -69,18 +69,22 @@ export default function LeaderboardScreen() {
         />
       }
     >
+      {/* Bug #19: the leaderboard only needs to show the score — drop the
+          "Ranked by …" subtitle entirely. */}
       <View style={styles.header}>
         <Text style={styles.title}>Leaderboard</Text>
-        <Text style={styles.subtitle}>Ranked by total habits completed</Text>
       </View>
 
-      {/* Column header */}
+      {/* Column header. numberOfLines={1} stops the uppercase + letter-spaced
+          "MONTH" from wrapping to "MONT\nH" ("mont h") inside the 52px column
+          (bug #21). Widths stay 52 to line up with the data rows
+          (LeaderboardRow statCol = 52). */}
       <View style={styles.colHeader}>
-        <Text style={[styles.colHeaderText, { width: 36 }]}>#</Text>
-        <Text style={[styles.colHeaderText, { flex: 1, marginLeft: 44, textAlign: 'left' }]}>Name</Text>
-        <Text style={[styles.colHeaderText, { width: 52 }]}>Month</Text>
-        <Text style={[styles.colHeaderText, { width: 52 }]}>Year</Text>
-        <Text style={[styles.colHeaderText, { width: 52 }]}>Pts</Text>
+        <Text numberOfLines={1} style={[styles.colHeaderText, { width: 36 }]}>#</Text>
+        <Text numberOfLines={1} style={[styles.colHeaderText, { flex: 1, marginLeft: 44, textAlign: 'left' }]}>Name</Text>
+        <Text numberOfLines={1} style={[styles.colHeaderText, { width: 52 }]}>Month</Text>
+        <Text numberOfLines={1} style={[styles.colHeaderText, { width: 52 }]}>Year</Text>
+        <Text numberOfLines={1} style={[styles.colHeaderText, { width: 52 }]}>Pts</Text>
       </View>
 
       {leaderboard.map((entry) => (
@@ -128,7 +132,9 @@ const styles = StyleSheet.create({
     color: c.text3,
     textTransform: 'uppercase',
     textAlign: 'center',
-    letterSpacing: 0.6,
+    // 0.4 matches LeaderboardRow statLabel (which renders "MONTH" cleanly in a
+    // 52px column); the old 0.6 + uppercase pushed "MONTH" to wrap (bug #21).
+    letterSpacing: 0.4,
   },
   empty: {
     flex: 1,
