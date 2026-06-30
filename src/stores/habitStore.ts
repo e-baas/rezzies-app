@@ -8,7 +8,7 @@ interface HabitState {
   bonusProgress: BonusProgress[];
   leaderboard: LeaderboardEntry[];
   loading: boolean;
-  loadTodayChecks: (participantId: string, habitIds: string[]) => Promise<void>;
+  loadTodayChecks: (participantId: string, habitIds: string[], date?: string) => Promise<void>;
   toggleHabit: (participantId: string, habitId: string, date: string) => Promise<void>;
   loadBonusProgress: (participantId: string, bonusIds: string[]) => Promise<void>;
   updateBonusProgress: (participantId: string, bonusId: string, current: number, target: number, award: number) => Promise<void>;
@@ -128,13 +128,16 @@ async function recalculateTotals(participantId: string, habitPointsMap: Record<s
 export const useHabitStore = create<HabitState>((set, get) => ({
   todayChecks: [], bonusProgress: [], leaderboard: [], loading: false,
 
-  loadTodayChecks: async (participantId, habitIds) => {
-    const today = localDateString();
-    const { data } = await supabase.from('daily_checks').select('*').eq('participant_id', participantId).eq('date', today);
+  // Loads the checks for a given calendar day (default today). The `date`
+  // param powers previous-day editing (bug #20): the user can navigate back and
+  // adjust a day they forgot to log.
+  loadTodayChecks: async (participantId, habitIds, date) => {
+    const day = date || localDateString();
+    const { data } = await supabase.from('daily_checks').select('*').eq('participant_id', participantId).eq('date', day);
     const existing = data || [];
     set({ todayChecks: habitIds.map((habitId) => {
       const found = existing.find((c: any) => c.habit_id === habitId);
-      return found || { id: '', participant_id: participantId, habit_id: habitId, date: today, checked: false, created_at: today };
+      return found || { id: '', participant_id: participantId, habit_id: habitId, date: day, checked: false, created_at: day };
     })});
   },
 

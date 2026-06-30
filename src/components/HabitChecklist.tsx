@@ -20,6 +20,11 @@ interface Props {
   habits: HabitDefinition[];
   checks: DailyCheck[];
   participantId: string;
+  /** Calendar day (YYYY-MM-DD) these checks belong to. Defaults to today.
+      Drives previous-day editing (bug #20). */
+  date?: string;
+  /** Header label for the day, e.g. "Today" / "Yesterday" / "Sat, Jun 28". */
+  dayLabel?: string;
 }
 
 function CheckIcon() {
@@ -82,9 +87,12 @@ function HabitRow({ habit, checked, onToggle }: RowProps) {
   );
 }
 
-export function HabitChecklist({ habits, checks, participantId }: Props) {
+export function HabitChecklist({ habits, checks, participantId, date, dayLabel }: Props) {
   const toggleHabit = useHabitStore((s) => s.toggleHabit);
-  const today = localDateString();
+  // The day these checks belong to — today by default, or a past day the user
+  // navigated back to (bug #20).
+  const day = date || localDateString();
+  const isToday = day === localDateString();
 
   const checkedMap: Record<string, boolean> = {};
   checks.forEach((ch) => { checkedMap[ch.habit_id] = ch.checked; });
@@ -97,7 +105,9 @@ export function HabitChecklist({ habits, checks, participantId }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Today's Habits</Text>
+        <Text style={styles.title}>
+          {isToday ? "Today's Habits" : `${dayLabel ?? 'That day'}'s Habits`}
+        </Text>
         <Text style={styles.subtitle}>
           {checkedCount}/{habits.length} · {totalPoints} pts
         </Text>
@@ -108,7 +118,7 @@ export function HabitChecklist({ habits, checks, participantId }: Props) {
           key={habit.id}
           habit={habit}
           checked={checkedMap[habit.id] || false}
-          onToggle={() => toggleHabit(participantId, habit.id, today)}
+          onToggle={() => toggleHabit(participantId, habit.id, day)}
         />
       ))}
     </View>

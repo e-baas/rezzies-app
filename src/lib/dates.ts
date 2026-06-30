@@ -23,3 +23,31 @@ export function localDateString(d: Date = new Date()): string {
 export function localMonthStart(d: Date = new Date()): string {
   return localDateString(new Date(d.getFullYear(), d.getMonth(), 1));
 }
+
+/** Parse a `YYYY-MM-DD` string into a LOCAL Date (midnight local, not UTC). */
+export function parseLocalDate(ds: string): Date {
+  const [y, m, d] = ds.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** Add `n` days (may be negative) to a `YYYY-MM-DD` string, returning `YYYY-MM-DD`. */
+export function addLocalDays(ds: string, n: number): string {
+  const d = parseLocalDate(ds);
+  d.setDate(d.getDate() + n);
+  return localDateString(d);
+}
+
+/**
+ * Human label for a `YYYY-MM-DD` day relative to today:
+ * "Today", "Yesterday", or e.g. "Sat, Jun 28" (bug #20 — previous-day editing).
+ */
+export function formatDayLabel(ds: string): string {
+  const today = localDateString();
+  if (ds === today) return 'Today';
+  if (ds === addLocalDays(today, -1)) return 'Yesterday';
+  return parseLocalDate(ds).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}

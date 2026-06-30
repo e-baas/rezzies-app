@@ -10,6 +10,7 @@ import { BonusProgressList } from '../../src/components/BonusProgress';
 import { ProgramSwitcher } from '../../src/components/ProgramSwitcher';
 import { supabase } from '../../src/lib/supabase';
 import { calculateDailyPoints } from '../../src/engine/scoring';
+import { localDateString, addLocalDays, formatDayLabel } from '../../src/lib/dates';
 import { c, radii, space } from '../../src/theme/tokens';
 
 export default function HomeScreen() {
@@ -27,6 +28,14 @@ export default function HomeScreen() {
   const [groupRank, setGroupRank] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false); // bug #17
+  // Bug #20: the day currently being viewed/edited (YYYY-MM-DD). Defaults to
+  // today; the user can step back to adjust a day they forgot to log.
+  const [selectedDate, setSelectedDate] = useState<string>(() => localDateString());
+  const todayStr = localDateString();
+  const isToday = selectedDate === todayStr;
+  const goPrevDay = () => setSelectedDate((d) => addLocalDays(d, -1));
+  const goNextDay = () => setSelectedDate((d) => (d >= todayStr ? d : addLocalDays(d, 1)));
+  const jumpToToday = () => setSelectedDate(todayStr);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -83,18 +92,20 @@ export default function HomeScreen() {
   useEffect(() => { loadData(); }, [loadData, activeProgramId]);
   useFocusEffect(useCallback(() => { loadData(); }, []));
 
+  // Reload the checklist whenever the participant, habit set, or the selected
+  // day changes (bug #20 — stepping to a previous day loads that day's checks).
   useEffect(() => {
     if (participantId && habits.length > 0) {
-      loadTodayChecks(participantId, habits.map((h) => h.id));
+      loadTodayChecks(participantId, habits.map((h) => h.id), selectedDate);
       loadBonusProgress(participantId, monthlyBonuses.map((b) => b.id));
     }
-  }, [participantId, habits.length, monthlyBonuses.length]);
+  }, [participantId, habits.length, monthlyBonuses.length, selectedDate]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await loadData();
     if (participantId && habits.length > 0) {
-      await loadTodayChecks(participantId, habits.map((h) => h.id));
+      await loadTodayChecks(participantId, habits.map((h) => h.id), selectedDate);
     }
     setRefreshing(false);
   };
@@ -153,6 +164,36 @@ export default function HomeScreen() {
 
       <ProgramSwitcher visible={switcherOpen} onClose={() => setSwitcherOpen(false)} />
 
+      {/* Day selector (bug #20) — step back to a previous day to adjust
+          reporting. The ring + checklist below reflect the selected day; you
+          can't go past today. Tap the date to jump back to today. */}
+      <View style={styles.dateNav}>
+        <TouchableOpacity
+          onPress={goPrevDay}
+          style={styles.dateArrow}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={styles.dateArrowText}>‹</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.dateLabelWrap}
+          onPress={jumpToToday}
+          disabled={isToday}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.dateLabel}>{formatDayLabel(selectedDate)}</Text>
+          {!isToday && <Text style={styles.dateSub}>Tap to return to today</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={goNextDay}
+          style={styles.dateArrow}
+          disabled={isToday}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Text style={[styles.dateArrowText, isToday && styles.dateArrowDisabled]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Ring card */}
       <View style={styles.ringCard}>
         <ProgressRing
@@ -163,7 +204,7 @@ export default function HomeScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={styles.statValue}>+{dailyPoints.points}</Text>
-            <Text style={styles.statLabel}>today</Text>
+            <Text style={styles.statLabel}>{isToday ? 'today' : 'that day'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
@@ -180,11 +221,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Daily habits */}
+      {/* Daily habits — scoped to the selected day (bug #20) */}
       <HabitChecklist
         habits={habits}
         checks={todayChecks}
         participantId={participantId!}
+        date={selectedDate}
+        dayLabel={formatDayLabel(selectedDate)}
       />
 
       <View style={styles.divider} />
@@ -246,6 +289,51 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: c.primary,
     fontVariant: ['tabular-nums'],
+  },
+  // Day selector (bug #20)
+  dateNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: space.lg,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    backgroundColor: c.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: c.border,
+  },
+  dateArrow: {
+    width: 40,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateArrowText: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: c.text,
+    lineHeight: 28,
+  },
+  dateArrowDisabled: {
+    color: c.text3,
+    opacity: 0.4,
+  },
+  dateLabelWrap: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  dateLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: c.text,
+    letterSpacing: -0.2,
+  },
+  dateSub: {
+    fontSize: 11,
+    color: c.primary,
+    marginTop: 1,
+    fontWeight: '600',
   },
   ringCard: {
     alignItems: 'center',
